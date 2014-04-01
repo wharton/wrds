@@ -28,14 +28,14 @@ class SQLConnection(object):
             return a list of the libraries in sas.
         """
         cursor = self.conn.cursor()
-        cursor.execute('select unique libname from dictionar.tables;')
+        cursor.execute('select unique libname from dictionary.tables;')
         return [row[0].strip() for row in cursor.fetchall()]
 
     def get_tables(self, library, verbose=False):
         """
             returns a list of the datasets in a library.
             If verbose is true: returns a list of dictionaries containing the 
-            table name, the number of observations, and the desciprtion.
+            table name, the number of observations, and the description.
         """
         cursor = self.conn.cursor()
         query = 'select memname, memlabel, nobs from dictionary.tables where libname = %s' % library
