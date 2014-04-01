@@ -40,7 +40,10 @@ class SQLConnection(object):
         cursor = self.conn.cursor()
         query = 'select memname, memlabel, nobs from dictionary.tables where libname = %s' % library
         cursor.execute(query)
-        output = [{'name': name.strip(), 'desc': label.strip(), 'obs': int(obs)} for name, label, obs in cursor.fetchall()]
+        if verbose:
+            output = [{'name': name.strip(), 'desc': label.strip(), 'obs': int(obs)} for name, label, obs in cursor.fetchall()]
+        else:
+            output = [name[0].strip() for name in cursor.fetchall()]
 
         return output
 
