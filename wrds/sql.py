@@ -25,7 +25,7 @@ class SQLConnection(object):
         self.conn = None
         while attempt < 3 and not self.conn:
             try:
-                self.conn = jaydebeapi.connect('com.sas.net.sharenet.ShareNetDrive',
+                self.conn = jaydebeapi.connect('com.sas.net.sharenet.ShareNetDriver',
                     ['jdbc:sharenet://wrds-triton.wharton.upenn.edu:8551/', self.username, self.password])
                 print "Success"
                 return 1
