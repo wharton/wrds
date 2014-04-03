@@ -14,7 +14,7 @@ class SQLConnection(object):
             self.username = username
             self.password = password
     
-    def connnect(self):
+    def connect(self):
         """
             Connect to the sasshare. This will attempt to log in using the provided credentials.
             If it is rejected, the login will try three more times.
