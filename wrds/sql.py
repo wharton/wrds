@@ -77,8 +77,8 @@ class SQLConnection(object):
         cursor.execute(query.format(library=library, table=table))
         results = cursor.fetchall()
 
-        data = [{'name': name, 'type': tpe, 'length': length, 'description': label, 'format': formt, 'notnull': notnull}
-                    for name, tpe, length, label, formt, notnull in map(lambda s: s.strip(), [entry for entry in results])] 
+        data = [{'name': name, 'type': tpe, 'length': int(length), 'description': label, 'format': formt, 'notnull': notnull}
+                    for name, tpe, length, label, formt, notnull in [map(lambda s: str(s).strip(), e) for e in results]] 
         output = {}
         for item in data:
             output[item.pop('name')] = item
