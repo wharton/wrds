@@ -3,6 +3,7 @@ import getpass
 
 import jaydebeapi
 import pandas
+#import sqlparse
 
 class SQLConnection(object):
     def __init__(self, username=None, password=None):
@@ -85,13 +86,26 @@ class SQLConnection(object):
 
         return output
 
-    def sql(self, call, df=None, index=None):
+
+#    def _get_library_and_table(sql):
+#        parsed = sqlparse.parse(sql)
+#        query = parsed[0]
+#        struct = list(query.get_sublists())
+#        columns = [c.normalized for c in struct[0].get_sublists()]
+#        library = struct[1].get_parent_name().upper()
+#        table = struct[1].get_name().upper()
+#        return columns, library, table
+#
+    def sql(self, call, index=None, metadata=False):
         """
             This processes the SQL commands to a Pandas dataframe.
         """
-        if df:
-            pass
-        else:
-            return pandas.io.sql.read_sql(call, self.conn, index_col=index)
-    
+        df =  pandas.io.sql.read_sql(call, self.conn, index_col=index)
+
+        #if metadata:
+        #    columns, library, table = self._get_library_and_table(call)
+        #    desc = self.describe_table(library=library, table=table)
+        #    for a in [m for m in dir(df) if m in desc.keys()]:
+        #        df.__getattr__(a).__dict__ = df.__getattr__(a).__dict__.update(desc[a])
+        return df 
 
