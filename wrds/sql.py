@@ -55,7 +55,7 @@ class SQLConnection(object):
         results = cursor.fetchall()
          
         if verbose:
-            data = [{'name': name.strip(), 'desc': label.strip(), 'obs': int(obs)} for name, label, obs in [row for row in results]]
+            data = [{'name': name.strip(), 'desc': label.strip(), 'obs': float(obs)} for name, label, obs in [row for row in results]]
             output = {}
             for item in data:
                 output[item.pop('name')] = item
@@ -77,7 +77,7 @@ class SQLConnection(object):
         cursor.execute(query.format(library=library, table=table))
         results = cursor.fetchall()
 
-        data = [{'name': name, 'type': tpe, 'length': int(length), 'description': label, 'format': formt, 'notnull': notnull}
+        data = [{'name': name, 'type': tpe, 'length': float(length), 'description': label, 'format': formt, 'notnull': notnull}
                     for name, tpe, length, label, formt, notnull in [map(lambda s: str(s).strip(), e) for e in results]] 
         output = {}
         for item in data:
