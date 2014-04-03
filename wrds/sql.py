@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import os
 import getpass
 
 import jaydebeapi
@@ -57,7 +55,10 @@ class SQLConnection(object):
         results = cursor.fetchall()
          
         if verbose:
-            output = [{'name': name.strip(), 'desc': label.strip(), 'obs': int(obs)} for name, label, obs in [row for row in results]]
+            data = [{'name': name.strip(), 'desc': label.strip(), 'obs': int(obs)} for name, label, obs in [row for row in results]]
+            output = {}
+            for item in data:
+                output[item.pop('name')] = item
         else:
             output = [name[0].strip() for name in results]
 
@@ -75,8 +76,13 @@ class SQLConnection(object):
                  '''
         cursor.execute(query.format(library=library, table=table))
         results = cursor.fetchall()
-        output = [{'name': name, 'type': tpe, 'length': length, 'description': label, 'format': formt, 'notnull': notnull}
+
+        data = [{'name': name, 'type': tpe, 'length': length, 'description': label, 'format': formt, 'notnull': notnull}
                     for name, tpe, length, label, formt, notnull in map(lambda s: s.strip(), [entry for entry in results])] 
+        output = {}
+        for item in data:
+            output[item.pop('name')] = item
+
         return output
 
     def sql(self, call, df=None, index=None):
