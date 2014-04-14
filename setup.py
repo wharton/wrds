@@ -20,6 +20,7 @@ requires = [
     'pandas',
     'jaydebeapi',
     'matplotlib',
+    'sqlparse'
 ]
 
 setup(
