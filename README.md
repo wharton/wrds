@@ -20,7 +20,7 @@ Its format is as follows:
     password=<SAS Password that has been run through PWENCODE>
     classpath=<set of paths to sas.core.jar and sas.intrnet.javatools.jar>
 
-You will also need to install the latest JDBC drivers as per the directions found here[https://wrds-web.wharton.upenn.edu/wrds/support/Accessing%20and%20Manipulating%20the%20Data/_007R%20Programming/_001Using%20R%20with%20WRDS.cfm]. They can be found in the "Preparing Your Environment - R Studio" section.
+You will also need to install the latest JDBC drivers as per the directions found [here](https://wrds-web.wharton.upenn.edu/wrds/support/Accessing%20and%20Manipulating%20the%20Data/_007R%20Programming/_001Using%20R%20with%20WRDS.cfm). They can be found in the "Preparing Your Environment - R Studio" section.
 
 Once the JDBC drivers have been installed, set classpath in the .wrdsauthrc file. Assume my local account is called 'wrdsuser'.
 
