@@ -1,0 +1,6 @@
+build/
+dist/
+wrds.egg-info/
+*.log
+*.pyc
+__pycache__/
