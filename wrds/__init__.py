@@ -1,3 +1,7 @@
+"""
+For additional help, please see https://wrds-web.wharton.upenn.edu/wrds/support/
+"""
+
 import jaydebeapi
 import os
 import pandas as pd
