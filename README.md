@@ -28,3 +28,7 @@ Example:
 
     classpath=/Users/wrdsuser/WRDS_DRIVERS/sas.core.jar:/Users/wrdsuser/WRDS_DRIVERS/sas.intrnet.javatools.jar
 
+After the above tasks have been completed, you should ready to go.
+
+    pip install wrds
+
