@@ -2,7 +2,8 @@ import jaydebeapi
 import os
 import pandas as pd
 import getpass
-from six.moves import configparser, input
+from six.moves import configparser
+from six.moves import input as _input
 
 AUTHFILE = os.path.join(os.path.expanduser('~'), '.wrdsauthrc')
 
@@ -43,7 +44,7 @@ def _parse_config(file_location):
     except:
         err = 'The .wrdsauthrc file appears to be improperly formatted.\n'
         err += 'Please check the format.\n'
-        err += 'The config file needs to appear as below, where <username> and <password> are replaced with your username and password, respectively.\n\n'
+        err += 'The config file needs to appear as below:\n\n'
         err += '[credentials]\n'
         err += 'username=<username>\n'
         err += 'password=<password>\n'
@@ -54,22 +55,15 @@ def _parse_config(file_location):
         return False
     return result
 
-def _welcome():
-    print('Did not find a .wrdsauthrc file in your home directory.')
-    print('Please enter your credentials manually.\n')
+def _usage():
+    print('Please include a .wrdsauthrc file in your home directory formatted as below:\n')
 
-def _manual_connect():
-    username = input('Username: ')
-    password = getpass.getpass()
-
-    conn = _authenticate(username, password)
-
-    while conn == None:
-        username = input('Username: ')
-        password = getpass.getpass()
-        conn = _authenticate(username, password)
-
-    print('You are now connected. \'help(wrds)\' to learn how to interact with the system.')
+    err = '[credentials]\n'
+    err += 'username=<username>\n'
+    err += 'password=<password>\n'
+    err += 'classpath=<set of paths to sas.core.jar and sas.intrnet.javatools.jar>\n\n'
+    err += 'Please see https://wrds-web.wharton.upenn.edu/wrds/support/ for additional information.\n'
+    print(err)
 
 def _greet_if_interactive():
     """ 
@@ -97,6 +91,5 @@ if os.path.isfile(AUTHFILE):
             print('Please provide your username and password.')
             _manual_connect()
 else:
-    _welcome()
-    _manual_connect()
+    _usage()
 
