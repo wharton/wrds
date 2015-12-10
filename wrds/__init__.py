@@ -81,15 +81,12 @@ def _greet_if_interactive():
         print('\'help(wrds)\' to learn how to interact with the system.')
     
 def _verify_credentials(username, password):
-    try:
-        if _authenticate(username, password):
-            _greet_if_interactive()
-        else:
-            err = '\nThe credentials found in {} could not be used to authenticate.\n'.format(AUTHFILE)
-            err += 'Please verify that the username and password are correct.'
-            raise OSError(err)
-    except:
-        print('Please verify that classpath has been set correctly in {}'.format(AUTHFILE))
+    if _authenticate(username, password):
+        _greet_if_interactive()
+    else:
+        err = '\nThe credentials found in {} could not be used to authenticate.\n'.format(AUTHFILE)
+        err += 'Please verify that the username and password are correct.'
+        raise OSError(err)
 
 def _verify_and_set_classpath(classpath):
     # Classpath should be two paths separated by a colon
