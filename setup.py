@@ -6,7 +6,7 @@ except ImportError:
 setup(
         name="wrds",
         version='0.0.5',
-        description="Connect to wrds-cloud locally.",
+        description="Read SAS datasets remotely (from wrds-cloud) into a Pandas dataframe.",
         author="Joe Dougherty",
         author_email="josepd@wharton.upenn.edu",
         url="https://github.com/wharton/wrds",
