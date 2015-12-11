@@ -4,7 +4,7 @@ Read SAS datasets remotely (from wrds-cloud) into a Pandas dataframe.
 
 ## Pre-Installation: ##
 
-*Note:* *wrds* has *pandas* and *jaydebeapi* as dependencies. These will be installed alongside *wrds* in the event that they do not already exist in your environment.
+Note: **wrds** has **pandas** and **jaydebeapi** as dependencies. These will be installed alongside **wrds** in the event that they do not already exist in your environment.
 
 ### Mac OS X ###
 
@@ -32,14 +32,6 @@ You can install *g++* on a Debian-based system with `apt-get install g++` to res
 
 You will also need to install the latest JDBC drivers as per the directions found [here](https://wrds-web.wharton.upenn.edu/wrds/support/Accessing%20and%20Manipulating%20the%20Data/_007R%20Programming/_001Using%20R%20with%20WRDS.cfm). They can be found in the "Preparing Your Environment - R Studio" section.
 
-Once the JDBC drivers have been installed, set classpath in the .wrdsauthrc file. 
-
-Assume my local account is called 'wrdsuser'.
-
-Example:
-
-    classpath=/Users/wrdsuser/WRDS_DRIVERS/sas.core.jar:/Users/wrdsuser/WRDS_DRIVERS/sas.intrnet.javatools.jar
-
 ### Configuration File Setup ###
 
 **wrds** expects there to be a config file in your home directory named `.wrdsauthrc`
@@ -50,4 +42,12 @@ Its format is as follows:
     username=<username>
     password=<SAS Password that has been run through PWENCODE>
     classpath=<set of paths to sas.core.jar and sas.intrnet.javatools.jar>
+
+Once the JDBC drivers above have been installed, set classpath in the .wrdsauthrc file. 
+
+Assume my local account is 'wrdsuser'.
+
+Example:
+
+    classpath=/Users/wrdsuser/WRDS_DRIVERS/sas.core.jar:/Users/wrdsuser/WRDS_DRIVERS/sas.intrnet.javatools.jar
 
