@@ -15,14 +15,14 @@ Prior to installation, you may need to export the following variables for **pand
 
 ### Linux ###
 
-Depending on your setup and distribution, you may need to install g++ for **pandas** to install successfully.
+Depending on your setup and distribution, you may need to install **g++** for **pandas** to install successfully.
 
 If you encounter...
 
     x86_64-linux-gnu-gcc: error trying to exec 'cc1plus': execvp: No such file or directory
     error: Setup script exited with error: command 'x86_64-linux-gnu-gcc' failed with exit status 1
 
-You can install *g++* on a Debian-based system with `apt-get install g++` to resolve this.
+You can install **g++** on a Debian-based system with `apt-get install g++` to resolve this.
 
 ## Installation ##
 
