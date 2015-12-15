@@ -8,8 +8,8 @@ import pandas as pd
 import getpass
 from six.moves import configparser
 from six.moves import input as _input
-
-AUTHFILE = os.path.join(os.path.expanduser('~'), '.wrdsauthrc')
+import getpass
+import platform
 
 def sql(call, index = None):
     """
@@ -57,7 +57,12 @@ def _parse_config(file_location):
         raise SyntaxError(err)
 
 def _usage():
-    print('Please include a .wrdsauthrc file in your home directory formatted as below:\n')
+    if platform.system() == 'Windows':
+        home_dir = os.path.expanduser('~'+getpass.getuser())
+    else:
+        home_dir = os.path.expanduser('~')
+
+    print('Please include a .wrdsauthrc file in your home directory ({}) formatted as below:\n'.format(home_dir))
 
     err = '[credentials]\n'
     err += 'username=<username>\n'
@@ -88,10 +93,10 @@ def _verify_credentials(username, password):
         err += 'Please verify that the username and password are correct.'
         raise OSError(err)
 
-def _verify_and_set_classpath(classpath):
+def _verify_and_set_classpath(classpath, path_delimiter):
     # Classpath should be two paths separated by a colon
     # Try to split on : and check that both paths exist
-    paths_to_check = classpath.split(':')
+    paths_to_check = classpath.split(path_delimiter)
 
     if paths_to_check == ['']: # The user may have not included any paths in the classpath section
         err = '\nPlease specify paths for the JDBC drivers in the classpath section of {}'.format(AUTHFILE)
@@ -107,9 +112,19 @@ def _verify_and_set_classpath(classpath):
     os.environ['CLASSPATH'] = classpath
 
 def _verify_classpath_and_credentials(config_settings):
+    if platform.system() == 'Windows':
+        classpath_delimiter = ';'
+    else:
+        classpath_delimiter = ':'
+
     username, password, classpath = config_settings
-    _verify_and_set_classpath(classpath)               
+    _verify_and_set_classpath(classpath, classpath_delimiter)               
     _verify_credentials(username, password)
+
+if platform.system() == 'Windows':
+    AUTHFILE = os.path.join(os.path.expanduser('~'+getpass.getuser()), '.wrdsauthrc')
+else:
+    AUTHFILE = os.path.join(os.path.expanduser('~'), '.wrdsauthrc')
 
 if os.path.isfile(AUTHFILE):
     _verify_classpath_and_credentials(_parse_config(AUTHFILE))
