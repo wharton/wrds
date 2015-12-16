@@ -11,7 +11,9 @@ from six.moves import input as _input
 import getpass
 import platform
 
-def sql(call, index = None):
+CONN = None
+
+def sql(call, index = None, connection=CONN):
     """
     Run a SQL Query on the WRDS Database.
 
@@ -22,22 +24,17 @@ def sql(call, index = None):
     """
    
     try:
-        return pd.io.sql.read_sql(call, conn, index)
+        return pd.io.sql.read_sql(call, connection, index)
     except Exception as e:
         print('Sorry - this query could not be run.')
         print('Additional information:')
         print(e)
 
 def _authenticate(user, pw):
-    global conn
-
     try:
-        conn = jaydebeapi.connect('com.sas.net.sharenet.ShareNetDriver', ['jdbc:sharenet://wrds-cloud.wharton.upenn.edu:8551/', user, pw])
+        return jaydebeapi.connect('com.sas.net.sharenet.ShareNetDriver', ['jdbc:sharenet://wrds-cloud.wharton.upenn.edu:8551/', user, pw])
     except Exception as e:
         print(e)
-        conn = None
-
-    return conn
 
 def _parse_config(file_location):
     Config = configparser.ConfigParser()
@@ -128,6 +125,7 @@ else:
 
 if os.path.isfile(AUTHFILE):
     _verify_classpath_and_credentials(_parse_config(AUTHFILE))
+    username, password, _ = _parse_config(AUTHFILE)
+    CONN = _authenticate(username, password)
 else:
     _usage()
-
