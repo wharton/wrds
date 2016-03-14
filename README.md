@@ -34,7 +34,7 @@ You will also need to install the latest JDBC drivers as per the directions foun
 
 ### Configuration File Setup ###
 
-**wrds** expects there to be a config file in your home directory named `.wrdsauthrc`
+**wrds** expects there to be a config file in your local home directory named `.wrdsauthrc`
 
 Its format is as follows:
 
