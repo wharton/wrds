@@ -1,4 +1,5 @@
 build/
+.idea/
 dist/
 wrds.egg-info/
 *.log
