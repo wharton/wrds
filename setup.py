@@ -27,7 +27,7 @@ setup(
         name='wrds-py',
         version=wrds.__version__,
         description="Python access to WRDS Data",
-        long_description=open('README.RST').read(),
+        long_description=open('README.rst').read(),
         author='Eric Stein',
         author_email='ericst@wharton.upenn.edu',
         url='http://www.whartonwrds.com',

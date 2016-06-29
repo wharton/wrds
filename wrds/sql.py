@@ -1,48 +1,37 @@
 # -*- coding: utf-8 -*-
 import getpass
 
-import jaydebeapi
-import pandas
-#import sqlparse
+import pandas as pd
+import sqlalchemy as sa
+import prettytable
 
-class SQLConnection(object):
+class Connection(object):
     def __init__(self, username=None, password=None):
         if not username and not password:
-            print "Enter your credentials."
-            self.username = raw_input("Username: ")
-            self.password = getpass.getpass()
+            print("Enter your credentials.")
+            if not username:
+                username = getpass.getuser()
+                _ = input("Username ({}): ".format(username))
+                if _:
+                    username = _
+            self.username = username
+            if not password:
+                password = getpass.getpass('Enter your password:')
         else:
             self.username = username
-            self.password = password
+        self.engine = sa.create_engine('postgresql://{usr}:{pwd}@wrds-pgdata1-h/wrds'.format(usr=self.username, pwd=password)) 
+        try:
+            self.engine.connect()
+            self.insp = sa.inspect(self.engine)
+        except:
+            print("Error logging in. Try your username and password again")
     
-    def connect(self):
-        """
-            Connect to the sasshare. This will attempt to log in using the provided credentials.
-            If it is rejected, the login will try three more times.
-        """
-        attempt = 0
-        self.conn = None
-        while attempt < 3 and not self.conn:
-            try:
-                self.conn = jaydebeapi.connect('com.sas.net.sharenet.ShareNetDriver',
-                    ['jdbc:sharenet://wrds-triton.wharton.upenn.edu:8551/', self.username, self.password])
-                print "Success"
-                return 1
-            except:
-                print "Your username or password might be incorrect."
-                self.username = raw_input('Username: ')
-                self.password = getpass.getpass()
-                attempt += 1
-        print "You were unable to connect. Please contact support."
-        return 0
-
     def get_libraries(self):
         """
-            return a list of the libraries in sas.
+            Use inspection to return all schemas   
         """
-        cursor = self.conn.cursor()
-        cursor.execute('select unique libname from dictionary.tables;')
-        return [row[0].strip() for row in cursor.fetchall()]
+        for schema in self.insp.get_schema_names():
+            print(schema)
 
     def get_tables(self, library, verbose=False):
         """
@@ -50,62 +39,28 @@ class SQLConnection(object):
             If verbose is true: returns a list of dictionaries containing the 
             table name, the number of observations, and the description.
         """
-        cursor = self.conn.cursor()
-        query = 'select memname, memlabel, nobs from dictionary.tables where libname = "%s";' % library
-        cursor.execute(query)
-        results = cursor.fetchall()
-         
-        if verbose:
-            data = [{'name': name.strip(), 'desc': label.strip(), 'obs': float(obs)} for name, label, obs in [row for row in results]]
-            output = {}
-            for item in data:
-                output[item.pop('name')] = item
-        else:
-            output = [name[0].strip() for name in results]
-
-        return output
+        for table in self.insp.get_table_names(schema=library):
+            print(table)
 
     def describe_table(self, library, table):
         """
             Takes the library and the table and describes all the columns in that table.
-            Includes Column Name, Column Type, Column Length, Column Label, Column Format, Is Null?.
+            Includes Column Name, Column Type, Nullable?.
         """
-        cursor = self.conn.cursor()
-        query = '''select name, type, length, label, format, notnull
-                 from dictionary.columns
-                 WHERE libname = "{library}" AND memname="{table}";
-                 '''
-        cursor.execute(query.format(library=library, table=table))
-        results = cursor.fetchall()
+        output = prettytable.PrettyTable(["Name", "Type", "Nullable"])
+        for row in self.insp.get_columns(table, schema=library):
+            output.add_row([row['name'], row['type'], row['nullable']])
+        print(output)
 
-        data = [{'name': name, 'type': tpe, 'length': float(length), 'description': label, 'format': formt, 'notnull': notnull}
-                    for name, tpe, length, label, formt, notnull in [map(lambda s: str(s).strip(), e) for e in results]] 
-        output = {}
-        for item in data:
-            output[item.pop('name')] = item
-
-        return output
-
-
-#    def _get_library_and_table(sql):
-#        parsed = sqlparse.parse(sql)
-#        query = parsed[0]
-#        struct = list(query.get_sublists())
-#        columns = [c.normalized for c in struct[0].get_sublists()]
-#        library = struct[1].get_parent_name().upper()
-#        table = struct[1].get_name().upper()
-#        return columns, library, table
-#
-    def sql(self, call, index=None, metadata=False):
+    def raw_sql(self, sql, coerce_float=True, date_cols=None):
         """
             This processes the SQL commands to a Pandas dataframe.
         """
-        df =  pandas.io.sql.read_sql(call, self.conn, index_col=index)
+        return pd.read_sql_query(sql, self.engine, coerce_float=coerce_float, parse_dates=date_cols)
 
-        #if metadata:
-        #    columns, library, table = self._get_library_and_table(call)
-        #    desc = self.describe_table(library=library, table=table)
-        #    for a in [m for m in dir(df) if m in desc.keys()]:
-        #        df.__getattr__(a).__dict__ = df.__getattr__(a).__dict__.update(desc[a])
-        return df 
+    def get_table(self, library, table, columns=None, index_col=None, date_cols=None):
+        """
+            Return an entire table from the database
+        """
+        return pd.read_sql_table(table, self.engine, schema=library, columns=columns, index_col=index_col, parse_dates=date_cols)
 
