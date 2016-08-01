@@ -11,7 +11,7 @@ from six.moves import input as _input
 
 AUTHFILE = os.path.join(os.path.expanduser('~'), '.wrdsauthrc')
 
-def sql(call, index = None):
+def sql(call, index=None):
     """
     Run a SQL Query on the WRDS Database.
 
