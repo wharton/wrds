@@ -5,26 +5,17 @@ import pandas as pd
 import sqlalchemy as sa
 import prettytable
 
+
 class Connection(object):
-    def __init__(self, username=None, password=None):
-        if not username and not password:
-            print("Enter your credentials.")
-            if not username:
-                username = getpass.getuser()
-                _ = input("Username ({}): ".format(username))
-                if _:
-                    username = _
-            self.username = username
-            if not password:
-                password = getpass.getpass('Enter your password:')
-        else:
-            self.username = username
-        self.engine = sa.create_engine('postgresql://{usr}:{pwd}@wrds-pgdata1-h/wrds'.format(usr=self.username, pwd=password)) 
+    def __init__(self):
+        self.username = getpass.getuser()
+        self.engine = sa.create_engine('postgresql://wrds-pgdata2.wharton.upenn.edu:9737/wrds'.format(usr=self.username)) 
         try:
             self.engine.connect()
             self.insp = sa.inspect(self.engine)
-        except:
-            print("Error logging in. Try your username and password again")
+        except Exception as e:
+            print(e)
+            print("Error logging in. Please ensure your .pgpass file exists and the permisisons are correct")
     
     def get_libraries(self):
         """
