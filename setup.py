@@ -1,8 +1,6 @@
 import os
 import sys
 
-import wrds
-
 try:
     from setuptools import setup
 except ImportError:
@@ -18,14 +16,16 @@ packages = [
 
 requires = [
     'pandas',
-    'jaydebeapi',
     'matplotlib',
-    'sqlparse'
+    'sqlparse',
+    'sqlalchemy',
+    'pyodbc',
+    'psycopg2'
 ]
 
 setup(
         name='wrds-py',
-        version=wrds.__version__,
+        version=3.0,
         description="Python access to WRDS Data",
         long_description=open('README.rst').read(),
         author='Eric Stein',
