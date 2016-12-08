@@ -16,10 +16,7 @@ packages = [
 
 requires = [
     'pandas',
-    'matplotlib',
-    'sqlparse',
     'sqlalchemy',
-    'pyodbc',
     'psycopg2'
 ]
 
@@ -32,17 +29,22 @@ setup(
         author_email='ericst@wharton.upenn.edu',
         url='http://www.whartonwrds.com',
         packages=packages,
-        package_data = {
-            '': ['*.rst'],
+        package_data={
+            '': ['LICENSE', 'NOTICE', '*.rst'],
             },
         classifiers=(
-           'Development Status :: 5 - Beta',
+           'Programming Language :: Python',
+           'Programming Language :: Python :: 2.7',
+           'Programming Language :: Python :: 3',
+           'Programming Language :: Python :: 3.5',
+           'Development Status :: 4 - Beta',
            'Environment :: Console',
-           'Environment :: X11 Applications :: GTK',
            'Intended Audience :: End Users/Desktop',
            'Intended Audience :: Financial and Insurance Industry',
            'Intended Audience :: Education',
            'Intended Audience :: Science/Research',
+           'Topic :: Office/Business :: Financial',
+           'Topic :: Scientific/Engineering :: Information Analysis',
         ),
 )
         
