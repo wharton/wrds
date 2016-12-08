@@ -29,6 +29,7 @@ setup(
         author_email='ericst@wharton.upenn.edu',
         url='http://www.whartonwrds.com',
         packages=packages,
+        install_requires=requires,
         package_data={
             '': ['LICENSE', 'NOTICE', '*.rst'],
             },
