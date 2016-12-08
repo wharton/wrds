@@ -1,3 +1,5 @@
 *.py[oc]
 __pycache__
 docs/build/
+*.ipynb
+.ipynb_checkpoints

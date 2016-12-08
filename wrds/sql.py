@@ -37,7 +37,7 @@ class Connection(object):
                 username = uname
             passwd = getpass.getpass('Enter your password:')
             self.engine = sa.create_engine('postgresql://{usr}:{pwd}@wrds-pgdata2.wharton.upenn.edu:9737/wrds'.format(usr=username, pwd=passwd)) 
-            warnings.warn("WRDS recommends setting up a .pgpass file. You can find more info here: https://www.postgresql.org/docs/9.2/static/libpq-pgpass.html")
+            warnings.warn("WRDS recommends setting up a .pgpass file. You can find more info here: https://www.postgresql.org/docs/9.2/static/libpq-pgpass.html.")
             try:
                 self.engine.connect()
             except Exception as e:
@@ -58,7 +58,7 @@ class Connection(object):
         ;
         """
         cursor = self.engine.execute(query)
-        self.schema_perm = [x[0] for x in cursor.fetchall() if not x[0].endswith('old')]
+        self.schema_perm = [x[0] for x in cursor.fetchall() if not (x[0].endswith('_old') or x[0].endswith('_all'))]
         print("Done")
 
 
@@ -87,7 +87,7 @@ class Connection(object):
             ['wciklink_gvkey', 'dforms', 'wciklink_cusip', 'wrds_forms', ...]
         """
         if library in self.schema_perm:
-            return self.insp.get_table_names(schema=library)
+            return self.insp.get_view_names(schema=library)
         else:
             print("You do not have permission to access the {} library.".format(library))
 
@@ -152,7 +152,7 @@ class Connection(object):
             print("You do not have permission to access that product")
             raise e
 
-    def get_table(self, library, table, obs=-1, columns=None, coerce_float=None, index_col=None, date_cols=None):
+    def get_table(self, library, table, obs=-1, offset=0, columns=None, coerce_float=None, index_col=None, date_cols=None):
         """
             Creates a data frame from an entire table in the database.
 
@@ -162,6 +162,9 @@ class Connection(object):
             :param obs: (optional) int, default: -1
                 Specifies the number of observations to pull from the table. An integer
                 less than 0 will return the entire table.
+            :param offset: (optional) int, default: 0
+                Specifies the starting point for the query. An offset of 0 will start
+                selecting from the beginning.
             :param columns: (optional) list or tuple, default: None
                 Specifies the columns to be included in the output data frame.
             :param coerce_float: (optional) boolean, default: True
@@ -199,5 +202,6 @@ class Connection(object):
             cols = '*'
         else:
             cols = ','.join(columns)
-        sqlstmt = 'select {cols} from {schema}.{table} {obsstmt};'.format(cols=cols, schema=library, table=table, obsstmt=obsstmt)
+        sqlstmt = 'select {cols} from {schema}.{table} {obsstmt} OFFSET {offset};'.format(cols=cols, schema=library,
+                table=table, obsstmt=obsstmt, offset=offset)
         return self.raw_sql(sqlstmt, coerce_float=coerce_float, index_col=index_col, date_cols=date_cols)
