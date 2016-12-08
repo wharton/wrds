@@ -5,6 +5,22 @@ WRDS-Py is a library for extracting data from WRDS data sources and getting it i
 The library allows users to access SAS/SHARE and extract data using SQL statements. The data
 that is returned is read into a Pandas data frame.
 
+Installation
+~~~~~~~~~~~~
+
+Mac OS/Linux
+
+$ python setup.py install
+
+Windows
+
+The WRDS-PY package requires Pandas and Psycopg2. Binaries of these can be found here:
+http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg
+
+Once the two required packages are installed, you can run
+$ python setup.py install
+
+
 Usage
 ~~~~~
 
