@@ -8,8 +8,9 @@ import sqlalchemy as sa
 from sys import version_info
 py3 = version_info[0] > 2
 
-if not py3:  
+if not py3:
     input = raw_input  # use raw_input in python 2
+
 
 class Connection(object):
     def __init__(self):
@@ -17,7 +18,7 @@ class Connection(object):
         Establish the connection to the database. This will use the .pgpass file if the user has set one up. If not,
         it will ask the user for a username and password. It will also direct the user to information on setting up
         .pgpass
-        
+
         Additionally, creating the isntance will load a list of schemas the user has permission to access.
 
         :return: None
@@ -27,7 +28,7 @@ class Connection(object):
         Loading library list...
         Done
         """
-        self.engine = sa.create_engine('postgresql://wrds-pgdata2.wharton.upenn.edu:9737/wrds') 
+        self.engine = sa.create_engine('postgresql://wrds-pgdata2.wharton.upenn.edu:9737/wrds')
         try:
             self.engine.connect()
         except Exception as e:
@@ -36,16 +37,16 @@ class Connection(object):
             if not username:
                 username = uname
             passwd = getpass.getpass('Enter your password:')
-            self.engine = sa.create_engine('postgresql://{usr}:{pwd}@wrds-pgdata2.wharton.upenn.edu:9737/wrds'.format(usr=username, pwd=passwd)) 
+            self.engine = sa.create_engine('postgresql://{usr}:{pwd}@wrds-pgdata2.wharton.upenn.edu:9737/wrds'.format(usr=username, pwd=passwd), connect_args={'sslmode':'require'})
             warnings.warn("WRDS recommends setting up a .pgpass file. You can find more info here: https://www.postgresql.org/docs/9.2/static/libpq-pgpass.html.")
             try:
                 self.engine.connect()
             except Exception as e:
                 print("There was an error with your password.")
                 raise e
-    
+
         self.insp = sa.inspect(self.engine)
-        print("Loading library list...") 
+        print("Loading library list...")
         query = """
         WITH RECURSIVE "names"("name") AS (
         SELECT n.nspname AS "name"
@@ -61,11 +62,10 @@ class Connection(object):
         self.schema_perm = [x[0] for x in cursor.fetchall() if not (x[0].endswith('_old') or x[0].endswith('_all'))]
         print("Done")
 
-
     def list_libraries(self):
         """
             Return all the libraries (schemas) the user can access.
-            
+
             :rtype: list
 
             Usage::
@@ -73,7 +73,7 @@ class Connection(object):
             ['aha', 'audit', 'block', 'boardex', ...]
         """
         return self.schema_perm
-    
+
     def list_tables(self, library):
         """
             Returns a list of all the tables within a schema.
