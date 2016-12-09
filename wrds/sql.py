@@ -19,7 +19,7 @@ class Connection(object):
         it will ask the user for a username and password. It will also direct the user to information on setting up
         .pgpass
 
-        Additionally, creating the isntance will load a list of schemas the user has permission to access.
+        Additionally, creating the instance will load a list of schemas the user has permission to access.
 
         :return: None
 
@@ -28,16 +28,18 @@ class Connection(object):
         Loading library list...
         Done
         """
-        self.engine = sa.create_engine('postgresql://wrds-pgdata2.wharton.upenn.edu:9737/wrds')
+        self.engine = sa.create_engine('postgresql://wrds-pgdata2.wharton.upenn.edu:9737/wrds',
+                connect_args={'sslmode': 'require'})
         try:
             self.engine.connect()
         except Exception as e:
             uname = getpass.getuser()
-            username = input("Enter your username [{}]:".format(uname))
+            username = input("Enter your WRDS username [{}]:".format(uname))
             if not username:
                 username = uname
             passwd = getpass.getpass('Enter your password:')
-            self.engine = sa.create_engine('postgresql://{usr}:{pwd}@wrds-pgdata2.wharton.upenn.edu:9737/wrds'.format(usr=username, pwd=passwd), connect_args={'sslmode':'require'})
+            self.engine = sa.create_engine('postgresql://{usr}:{pwd}@wrds-pgdata2.wharton.upenn.edu:9737/wrds'.format(
+                usr=username, pwd=passwd), connect_args={'sslmode':'require'})
             warnings.warn("WRDS recommends setting up a .pgpass file. You can find more info here: https://www.postgresql.org/docs/9.2/static/libpq-pgpass.html.")
             try:
                 self.engine.connect()
@@ -111,9 +113,34 @@ class Connection(object):
                   4   coname     True  VARCHAR
                   5    fname     True  VARCHAR
         """
+        rows = self.get_row_count(library, table)
+        print("Approximately {} rows in {}.{}.".format(rows, library, table))
         table_info = pd.DataFrame.from_dict(self.insp.get_columns(table, schema=library))
         return table_info[['name', 'nullable', 'type']]
 
+    def get_row_count(self, library, table):
+        """
+            Uses the library and table to get the approximate row count for the table. 
+            
+            :param library: Postgres schema name.
+            :param table: Postgres table name.
+
+            :rtype: int
+    
+            Usage::
+            >>> connection.get_row_count('wrdssec', 'dforms')
+            16378400
+        """
+        sqlstmt = """
+            select reltuples from pg_class r JOIN pg_namespace n on (r.relnamespace = n.oid)
+            where r.relkind = 'r' and n.nspname = '{}_all' and r.relname = '{}';
+            """.format(library, table)
+
+        try:
+            result = self.engine.execute(sqlstmt)
+            return int(result.fetchone()[0])
+        except Exception as e:
+            print("There was a problem with retrieving the row count: {}".format(e))
 
     def raw_sql(self, sql, coerce_float=True, date_cols=None, index_col=None):
         """
