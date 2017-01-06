@@ -25,6 +25,7 @@ class SQLConnection(object):
         self.conn = None
         while attempt < 3 and not self.conn:
             try:
+                # PRIVATE CONNECTION STRING FROM WITHIN WRDS CLOUD. NOT FOR EXTERNAL USE.
                 self.conn = jaydebeapi.connect('com.sas.net.sharenet.ShareNetDriver',
                     ['jdbc:sharenet://wrds-proxy-w.wharton.private:8551/', self.username, self.password])
                 print "Success"
