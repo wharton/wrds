@@ -17,15 +17,16 @@ class SQLConnection(object):
     
     def connect(self):
         """
-            Connect to the sasshare. This will attempt to log in using the provided credentials.
-            If it is rejected, the login will try three more times.
+            Connect to SAS/SHARE via a wrds-cloud-login node (haproxy-sasshare:sasshare-priv).
+            This will attempt to log in using the provided credentials. If it is rejected,
+            the login will try three more times.
         """
         attempt = 0
         self.conn = None
         while attempt < 3 and not self.conn:
             try:
                 self.conn = jaydebeapi.connect('com.sas.net.sharenet.ShareNetDriver',
-                    ['jdbc:sharenet://wrds-triton.wharton.upenn.edu:8551/', self.username, self.password])
+                    ['jdbc:sharenet://wrds-proxy-w.wharton.private:8551/', self.username, self.password])
                 print "Success"
                 return 1
             except:
