@@ -28,7 +28,8 @@ class Connection(object):
         Loading library list...
         Done
         """
-        self.engine = sa.create_engine('postgresql://wrds-pgdata2.wharton.upenn.edu:9737/wrds',
+        pghost = "postgresql://wrds-pgdata.wharton.upenn.edu:9737/wrds"
+        self.engine = sa.create_engine(pghost,
                 connect_args={'sslmode': 'require'})
         try:
             self.engine.connect()
@@ -38,7 +39,7 @@ class Connection(object):
             if not username:
                 username = uname
             passwd = getpass.getpass('Enter your password:')
-            self.engine = sa.create_engine('postgresql://{usr}:{pwd}@wrds-pgdata2.wharton.upenn.edu:9737/wrds'.format(
+            self.engine = sa.create_engine(pghost.format(
                 usr=username, pwd=passwd), connect_args={'sslmode':'require'})
             warnings.warn("WRDS recommends setting up a .pgpass file. You can find more info here: https://www.postgresql.org/docs/9.2/static/libpq-pgpass.html.")
             try:
