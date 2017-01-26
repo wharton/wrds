@@ -11,6 +11,6 @@ setup(
         author_email="josepd@wharton.upenn.edu",
         url="https://github.com/wharton/wrds",
         packages=['wrds'],
-        install_requires=['jaydebeapi=0.2.0', 'pandas'],
+        install_requires=['jaydebeapi==0.2.0', 'pandas'],
 )
 
