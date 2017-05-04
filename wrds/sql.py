@@ -27,7 +27,7 @@ class Connection(object):
         Loading library list...
         Done
         """
-        self.engine = sa.create_engine('postgresql://wrds-pgdata2.wharton.upenn.edu:9737/wrds') 
+        self.engine = sa.create_engine('postgresql://wrds-pgdata.wharton.upenn.edu:9737/wrds') 
         try:
             self.engine.connect()
         except Exception as e:
