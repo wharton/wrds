@@ -8,7 +8,7 @@ import sqlalchemy as sa
 from sys import version_info
 py3 = version_info[0] > 2
 
-if not py3:  
+if not py3:
     input = raw_input  # use raw_input in python 2
 
 class Connection(object):
@@ -17,8 +17,8 @@ class Connection(object):
         Establish the connection to the database. This will use the .pgpass file if the user has set one up. If not,
         it will ask the user for a username and password. It will also direct the user to information on setting up
         .pgpass
-        
-        Additionally, creating the isntance will load a list of schemas the user has permission to access.
+
+        Additionally, creating the instance will load a list of schemas the user has permission to access.
 
         :return: None
 
@@ -27,25 +27,27 @@ class Connection(object):
         Loading library list...
         Done
         """
-        self.engine = sa.create_engine('postgresql://wrds-pgdata.wharton.upenn.edu:9737/wrds') 
+        self.engine = sa.create_engine('postgresql://wrds-pgdata.wharton.upenn.edu:9737/wrds', connect_args={'sslmode': 'require'}) 
         try:
             self.engine.connect()
         except Exception as e:
             uname = getpass.getuser()
-            username = input("Enter your username [{}]:".format(uname))
+            username = input("Enter your WRDS username [{}]:".format(uname))
             if not username:
                 username = uname
             passwd = getpass.getpass('Enter your password:')
-            self.engine = sa.create_engine('postgresql://{usr}:{pwd}@wrds-pgdata2.wharton.upenn.edu:9737/wrds'.format(usr=username, pwd=passwd)) 
-            warnings.warn("WRDS recommends setting up a .pgpass file. You can find more info here: https://www.postgresql.org/docs/9.2/static/libpq-pgpass.html")
+            pghost = 'postgresql://{usr}:{pwd}@wrds-pgdata.wharton.upenn.edu:9737/wrds'
+            self.engine = sa.create_engine(pghost.format(
+                usr=username, pwd=passwd), connect_args={'sslmode':'require'})
+            warnings.warn("WRDS recommends setting up a .pgpass file. You can find more info here: https://www.postgresql.org/docs/9.2/static/libpq-pgpass.html.")
             try:
                 self.engine.connect()
             except Exception as e:
                 print("There was an error with your password.")
                 raise e
-    
+
         self.insp = sa.inspect(self.engine)
-        print("Loading library list...") 
+        print("Loading library list...")
         query = """
         WITH RECURSIVE "names"("name") AS (
         SELECT n.nspname AS "name"
@@ -58,14 +60,13 @@ class Connection(object):
         ;
         """
         cursor = self.engine.execute(query)
-        self.schema_perm = [x[0] for x in cursor.fetchall() if not x[0].endswith('old')]
+        self.schema_perm = [x[0] for x in cursor.fetchall() if not (x[0].endswith('_old') or x[0].endswith('_all'))]
         print("Done")
-
 
     def list_libraries(self):
         """
             Return all the libraries (schemas) the user can access.
-            
+
             :rtype: list
 
             Usage::
@@ -73,7 +74,7 @@ class Connection(object):
             ['aha', 'audit', 'block', 'boardex', ...]
         """
         return self.schema_perm
-    
+
     def list_tables(self, library):
         """
             Returns a list of all the tables within a schema.
@@ -87,7 +88,7 @@ class Connection(object):
             ['wciklink_gvkey', 'dforms', 'wciklink_cusip', 'wrds_forms', ...]
         """
         if library in self.schema_perm:
-            return self.insp.get_table_names(schema=library)
+            return self.insp.get_view_names(schema=library)
         else:
             print("You do not have permission to access the {} library.".format(library))
 
@@ -111,9 +112,34 @@ class Connection(object):
                   4   coname     True  VARCHAR
                   5    fname     True  VARCHAR
         """
+        rows = self.get_row_count(library, table)
+        print("Approximately {} rows in {}.{}.".format(rows, library, table))
         table_info = pd.DataFrame.from_dict(self.insp.get_columns(table, schema=library))
         return table_info[['name', 'nullable', 'type']]
 
+    def get_row_count(self, library, table):
+        """
+            Uses the library and table to get the approximate row count for the table. 
+            
+            :param library: Postgres schema name.
+            :param table: Postgres table name.
+
+            :rtype: int
+    
+            Usage::
+            >>> connection.get_row_count('wrdssec', 'dforms')
+            16378400
+        """
+        sqlstmt = """
+            select reltuples from pg_class r JOIN pg_namespace n on (r.relnamespace = n.oid)
+            where r.relkind = 'r' and n.nspname = '{}_all' and r.relname = '{}';
+            """.format(library, table)
+
+        try:
+            result = self.engine.execute(sqlstmt)
+            return int(result.fetchone()[0])
+        except Exception as e:
+            print("There was a problem with retrieving the row count: {}".format(e))
 
     def raw_sql(self, sql, coerce_float=True, date_cols=None, index_col=None):
         """
@@ -152,7 +178,7 @@ class Connection(object):
             print("You do not have permission to access that product")
             raise e
 
-    def get_table(self, library, table, obs=-1, columns=None, coerce_float=None, index_col=None, date_cols=None):
+    def get_table(self, library, table, obs=-1, offset=0, columns=None, coerce_float=None, index_col=None, date_cols=None):
         """
             Creates a data frame from an entire table in the database.
 
@@ -162,6 +188,9 @@ class Connection(object):
             :param obs: (optional) int, default: -1
                 Specifies the number of observations to pull from the table. An integer
                 less than 0 will return the entire table.
+            :param offset: (optional) int, default: 0
+                Specifies the starting point for the query. An offset of 0 will start
+                selecting from the beginning.
             :param columns: (optional) list or tuple, default: None
                 Specifies the columns to be included in the output data frame.
             :param coerce_float: (optional) boolean, default: True
@@ -199,5 +228,6 @@ class Connection(object):
             cols = '*'
         else:
             cols = ','.join(columns)
-        sqlstmt = 'select {cols} from {schema}.{table} {obsstmt};'.format(cols=cols, schema=library, table=table, obsstmt=obsstmt)
+        sqlstmt = 'select {cols} from {schema}.{table} {obsstmt} OFFSET {offset};'.format(cols=cols, schema=library,
+                table=table, obsstmt=obsstmt, offset=offset)
         return self.raw_sql(sqlstmt, coerce_float=coerce_float, index_col=index_col, date_cols=date_cols)
