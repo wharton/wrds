@@ -1,5 +1,5 @@
 WRDS Python Data Access Library
-==============================
+===============================
 
 WRDS-Py is a library for extracting data from WRDS data sources and getting it into Pandas.
 The library allows users to access SAS/SHARE and extract data using SQL statements. The data
@@ -20,6 +20,7 @@ http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg
 Once the two required packages are installed, you can run
 $ python setup.py install
 
+For more information please consult the WRDS Support section at https://wrds-web.wharton.upenn.edu/wrds/support/.
 
 Usage
 ~~~~~
@@ -40,11 +41,11 @@ Success
 >>> df = connection.sql('SELECT * FROM COMP.ACO_IMDA')
 >>> df.head()
     gvkey        indfmt consol popsrc  fyr       datafmt  sequencen  \
-    0  001004  INDL             C       D    5  STD                   1
-    1  001013  INDL             C       D   10  STD                   1
-    2  001013  INDL             C       D   10  STD                   1
-    3  001034  INDL             C       D   12  STD                   1
-    4  001045  INDL             C       D   12  STD                   1
+    0  021004  INDL             C       D    5  STD                   1
+    1  001443  INDL             C       D   10  STD                   1
+    2  004013  INDL             C       D   10  STD                   1
+    3  001834  INDL             C       D   12  STD                   1
+    4  001945  INDL             C       D   12  STD                   1
 
                                                     note  \
                                                     0  per nw As previously announced, during the thi...
