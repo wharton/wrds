@@ -92,6 +92,28 @@ class Connection(object):
         else:
             print("You do not have permission to access the {} library.".format(library))
 
+    def __get_schema_for_view(self, schema, table):
+        """
+        Internal function for getting the schema based on a view
+        """
+        sql_code = """SELECT distinct(source_ns.nspname) as source_schema
+                      FROM pg_depend
+                      JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
+                      JOIN pg_class as dependent_view ON pg_rewrite.ev_class = dependent_view.oid
+                      JOIN pg_class as source_table ON pg_depend.refobjid = source_table.oid
+                      JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid
+                      AND pg_depend.refobjsubid = pg_attribute.attnum
+                      JOIN pg_namespace dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
+                      JOIN pg_namespace source_ns ON source_ns.oid = source_table.relnamespace
+                      where dependent_ns.nspname = '{schema}' and dependent_view.relname = '{view}';
+                    """.format(schema=schema, view=table)
+        if schema in self.schema_perm:
+            result = self.engine.execute(sql_code)
+            return result.fetchone()[0]
+        else:
+            print("You do not have access to the {} library".format(schema))
+            return False
+
     def describe_table(self, library, table):
         """
             Takes the library and the table and describes all the columns in that table.
@@ -130,16 +152,22 @@ class Connection(object):
             >>> connection.get_row_count('wrdssec', 'dforms')
             16378400
         """
-        sqlstmt = """
-            select reltuples from pg_class r JOIN pg_namespace n on (r.relnamespace = n.oid)
-            where r.relkind = 'r' and n.nspname = '{}_all' and r.relname = '{}';
-            """.format(library, table)
+        schema = self.__get_schema_for_view(library, table)
+        if schema: 
+            sqlstmt = """
+                select reltuples from pg_class r JOIN pg_namespace n on (r.relnamespace = n.oid)
+                where r.relkind = 'r' and n.nspname = '{}' and r.relname = '{}';
+                """.format(schema, table)
 
-        try:
-            result = self.engine.execute(sqlstmt)
-            return int(result.fetchone()[0])
-        except Exception as e:
-            print("There was a problem with retrieving the row count: {}".format(e))
+            try:
+                result = self.engine.execute(sqlstmt)
+                return int(result.fetchone()[0])
+            except Exception as e:
+                print("There was a problem with retrieving the row count: {}".format(e))
+                return 0
+        else:
+            print("There was a problem with retrieving the schema")
+            return None
 
     def raw_sql(self, sql, coerce_float=True, date_cols=None, index_col=None):
         """
