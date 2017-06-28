@@ -8,9 +8,9 @@ WRDS-Py is a library for extracting data from WRDS data sources and getting it i
 
     >>> import wrds
     >>> connection = wrds.Connection()
-    >>> connection.get_libraries()
-    >>> connection.get_tables('CRSP', verbose=True)
-    >>> data = connection.sql('SELECT * FROM CRSP.MSI', index='DATE')
+    >>> connection.list_libraries()
+    >>> connection.list_tables('crsp')
+    >>> data = connection.raw_sql('SELECT * FROM CRSP.MSI')
     >>> data.head()
 
 
