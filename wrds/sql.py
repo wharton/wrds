@@ -11,6 +11,12 @@ py3 = version_info[0] > 2
 if not py3:
     input = raw_input  # use raw_input in python 2
 
+class NotSubscribedError(PermissionError):
+    pass
+
+class SchemaNotFoundError(FileNotFoundError):
+    pass
+
 class Connection(object):
     def __init__(self):
         """
@@ -63,6 +69,26 @@ class Connection(object):
         self.schema_perm = [x[0] for x in cursor.fetchall() if not (x[0].endswith('_old') or x[0].endswith('_all'))]
         print("Done")
 
+    def __check_schema_perms(self, schema):
+        """
+            Check the permissions of the schema. Raise permissions error if user does not have
+            access. Raise other error if the schema does not exist.
+
+            Else, return True
+            
+            :param schema: Postgres schema name.
+            :rtype: bool
+            
+        """
+        
+        if schema in self.schema_perm:
+            return True
+        else:
+            if schema in self.insp.get_schema_names():
+                raise NotSubscribedError("You do not have permission to access the {} library".format(schema))
+            else:
+                raise SchemaNotFoundError("The {} library is not found.".format(schema)) 
+    
     def list_libraries(self):
         """
             Return all the libraries (schemas) the user can access.
@@ -87,10 +113,8 @@ class Connection(object):
             >>>connection.list_tables('wrdssec')
             ['wciklink_gvkey', 'dforms', 'wciklink_cusip', 'wrds_forms', ...]
         """
-        if library in self.schema_perm:
+        if self.__check_schema_perms(library):
             return self.insp.get_view_names(schema=library)
-        else:
-            print("You do not have permission to access the {} library.".format(library))
 
     def __get_schema_for_view(self, schema, table):
         """
@@ -107,12 +131,9 @@ class Connection(object):
                       JOIN pg_namespace source_ns ON source_ns.oid = source_table.relnamespace
                       where dependent_ns.nspname = '{schema}' and dependent_view.relname = '{view}';
                     """.format(schema=schema, view=table)
-        if schema in self.schema_perm:
+        if self.__check_schema_perms(schema):
             result = self.engine.execute(sql_code)
             return result.fetchone()[0]
-        else:
-            print("You do not have access to the {} library".format(schema))
-            return False
 
     def describe_table(self, library, table):
         """
@@ -203,7 +224,6 @@ class Connection(object):
         try:
             return pd.read_sql_query(sql, self.engine, coerce_float=coerce_float, parse_dates=date_cols, index_col=index_col)
         except sa.exc.ProgrammingError as e:
-            print("You do not have permission to access that product")
             raise e
 
     def get_table(self, library, table, obs=-1, offset=0, columns=None, coerce_float=None, index_col=None, date_cols=None):
@@ -256,6 +276,7 @@ class Connection(object):
             cols = '*'
         else:
             cols = ','.join(columns)
-        sqlstmt = 'select {cols} from {schema}.{table} {obsstmt} OFFSET {offset};'.format(cols=cols, schema=library,
-                table=table, obsstmt=obsstmt, offset=offset)
-        return self.raw_sql(sqlstmt, coerce_float=coerce_float, index_col=index_col, date_cols=date_cols)
+        if self.__check_schema_perms(schema):
+            sqlstmt = 'select {cols} from {schema}.{table} {obsstmt} OFFSET {offset};'.format(cols=cols, schema=library,
+                    table=table, obsstmt=obsstmt, offset=offset)
+            return self.raw_sql(sqlstmt, coerce_float=coerce_float, index_col=index_col, date_cols=date_cols)
