@@ -30,8 +30,6 @@ Usage
 Enter your credentials.
 Username: <your_username>
 Password: <your_password>
->>> db.connect()
-Success
 >>> db.list_libraries()
 ['audit', 'bank', 'block', 'bvd', 'bvdtrial', 'cboe', ...]
 >>> db.list_tables(library='crsp')
