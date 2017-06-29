@@ -7,10 +7,10 @@ WRDS Python Data Access Library
 WRDS-Py is a library for extracting data from WRDS data sources and getting it into Pandas.
 
     >>> import wrds
-    >>> connection = wrds.Connection()
-    >>> connection.get_libraries()
-    >>> connection.get_tables('CRSP', verbose=True)
-    >>> data = connection.sql('SELECT * FROM CRSP.MSI', index='DATE')
+    >>> db = wrds.Connection()
+    >>> db.get_libraries()
+    >>> db.get_tables('CRSP', verbose=True)
+    >>> data = db.sql('SELECT * FROM CRSP.MSI', index='DATE')
     >>> data.head()
 
 

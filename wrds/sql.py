@@ -29,7 +29,7 @@ class Connection(object):
         :return: None
 
         Usage::
-        >>> connection = wrds.Connection()
+        >>> db = wrds.Connection()
         Loading library list...
         Done
         """
@@ -96,7 +96,7 @@ class Connection(object):
             :rtype: list
 
             Usage::
-            >>> connection.list_libraries()
+            >>> db.list_libraries()
             ['aha', 'audit', 'block', 'boardex', ...]
         """
         return self.schema_perm
@@ -110,7 +110,7 @@ class Connection(object):
             :rtype: list
 
             Usage::
-            >>>connection.list_tables('wrdssec')
+            >>> db.list_tables('wrdssec')
             ['wciklink_gvkey', 'dforms', 'wciklink_cusip', 'wrds_forms', ...]
         """
         if self.__check_schema_perms(library):
@@ -146,7 +146,7 @@ class Connection(object):
             :rtype: pandas.DataFrame
 
             Usage::
-            >>> connection.describe_table('wrdssec_all', 'dforms')
+            >>> db.describe_table('wrdssec_all', 'dforms')
                         name nullable     type
                   0      cik     True  VARCHAR
                   1    fdate     True     DATE
@@ -170,7 +170,7 @@ class Connection(object):
             :rtype: int
     
             Usage::
-            >>> connection.get_row_count('wrdssec', 'dforms')
+            >>> db.get_row_count('wrdssec', 'dforms')
             16378400
         """
         schema = self.__get_schema_for_view(library, table)
@@ -211,7 +211,7 @@ class Connection(object):
             :rtype: pandas.DataFrame
 
             Usage ::
-            >>> data = connection.raw_sql('select cik, fdate, coname from wrdssec_all.dforms;', date_cols=['fdate'], index_col='cik')
+            >>> data = db.raw_sql('select cik, fdate, coname from wrdssec_all.dforms;', date_cols=['fdate'], index_col='cik')
             >>> data.head()
                 cik        fdate       coname
                 0000000003 1995-02-15  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
@@ -257,7 +257,7 @@ class Connection(object):
             :rtype: pandas.DataFrame
 
             Usage ::
-            >>> data = connection.get_table('wrdssec_all', 'dforms', obs=1000, columns=['cik', 'fdate', 'coname'])
+            >>> data = db.get_table('wrdssec_all', 'dforms', obs=1000, columns=['cik', 'fdate', 'coname'])
             >>> data.head()
                 cik        fdate       coname
                 0000000003 1995-02-15  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
@@ -276,7 +276,7 @@ class Connection(object):
             cols = '*'
         else:
             cols = ','.join(columns)
-        if self.__check_schema_perms(schema):
+        if self.__check_schema_perms(library):
             sqlstmt = 'select {cols} from {schema}.{table} {obsstmt} OFFSET {offset};'.format(cols=cols, schema=library,
                     table=table, obsstmt=obsstmt, offset=offset)
             return self.raw_sql(sqlstmt, coerce_float=coerce_float, index_col=index_col, date_cols=date_cols)
