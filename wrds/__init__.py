@@ -7,25 +7,29 @@ WRDS Python Data Access Library
 WRDS-Py is a library for extracting data from WRDS data sources and getting it into Pandas.
 
     >>> import wrds
-    >>> connection = wrds.SQLConnection(username='user', password='password') 
-    >>> connection.get_libraries()
-    >>> connection.get_tables('CRSP', verbose=True)
-    >>> data = connection.sql('SELECT * FROM CRSP.MSI', index='DATE')
+    >>> db = wrds.Connection()
+    >>> db.list_libraries()
+    ['aha', 'aha_sample', 'ahasamp', 'audit', 'audit_audit_comp', ...]
+    >>> db.list_tables(library='crsp')
+    ['acti', 'asia', 'asib', 'asic', 'asio', 'asix', 'bmdebt', 'bmheader', ...]
+    >>> data = db.raw_sql('SELECT * FROM crsp.stocknames', index_col='permno')
     >>> data.head()
-
-
+             permco      namedt   nameenddt     cusip    ncusip ticker  \
+    permno
+    10000.0  7952.0  1986-01-07  1987-06-11  68391610  68391610  OMFGA
+    10001.0  7953.0  1986-01-09  1993-11-21  36720410  39040610   GFGC
+    10001.0  7953.0  1993-11-22  2008-02-04  36720410  29274A10   EWST
+    10001.0  7953.0  2008-02-05  2009-08-03  36720410  29274A20   EWST
+    10001.0  7953.0  2009-08-04  2009-12-17  36720410  29269V10   EGAS
+    ...
 """
 
 __title__ = 'wrds-py'
-__version__ = '0.1.0'
-__author__ = 'Eric Stein'
-__copyright__ = '2014 Wharton Research Data Services'
+__version__ = '3.0'
+__author__ = 'Wharton Research Data Services'
+__copyright__ = '2017 Wharton Research Data Services'
 
 import os
 
-from .sql import SQLConnection
+from .sql import Connection
 
-
-# set up the Java environment for the odbc drivers.
-os.environ['JAVA_HOME'] = '/usr/lib/jvm/java'
-os.environ['CLASSPATH'] = '/usr/local/etc/sas_jdbc_driver/sas.core.jar:/usr/local/etc/sas_jdbc_driver/sas.intrnet.javatools.jar'

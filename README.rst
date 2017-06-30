@@ -1,47 +1,54 @@
 WRDS Python Data Access Library
-==============================
+===============================
 
 WRDS-Py is a library for extracting data from WRDS data sources and getting it into Pandas.
 The library allows users to access SAS/SHARE and extract data using SQL statements. The data
 that is returned is read into a Pandas data frame.
 
+Installation
+~~~~~~~~~~~~
+
+Mac OS/Linux
+
+$ python setup.py install
+
+Windows
+
+The WRDS-PY package requires Pandas and Psycopg2. Binaries of these can be found here:
+http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg
+
+Once the two required packages are installed, you can run
+$ python setup.py install
+
+For more information please consult the WRDS Support section at https://wrds-web.wharton.upenn.edu/wrds/support/.
+
 Usage
 ~~~~~
 
 >>> import wrds
->>> connection = wrds.SQLConnecion()
+>>> db = wrds.SQLConnecion()
 Enter your credentials.
 Username: <your_username>
 Password: <your_password>
->>>connection.connect()
-Success
->>> connection.get_libraries()
-['AUDIT', 'BANK', 'BLOCK', 'BVD', 'BVDTRIAL', 'CBOE', ...]
->>> connection.get_tables('COMP')
-['ACO_AMDA', 'ACO_IMDA', 'ACO_INDFNTA', 'ACO_INDFNTQ', ...]
->>> connection.describe_table('COMP', 'ACO_AMDA')
-{'consol': {'description': 'Level of Consolidation', format': '$2.', ...}
->>> df = connection.sql('SELECT * FROM COMP.ACO_IMDA')
->>> df.head()
-    gvkey        indfmt consol popsrc  fyr       datafmt  sequencen  \
-    0  001004  INDL             C       D    5  STD                   1
-    1  001013  INDL             C       D   10  STD                   1
-    2  001013  INDL             C       D   10  STD                   1
-    3  001034  INDL             C       D   12  STD                   1
-    4  001045  INDL             C       D   12  STD                   1
+>>> db.list_libraries()
+['audit', 'bank', 'block', 'bvd', 'bvdtrial', 'cboe', ...]
+>>> db.list_tables(library='crsp')
+['aco_amda', 'aco_imda', 'aco_indfnta', 'aco_indfntq', ...]
+>>> db.describe_table(library='csrp', table='stocknames')
+Approximately 58957 rows in crsp.stocknames.
+       name    nullable              type
+0      permno      True  DOUBLE PRECISION      
+1      permco      True  DOUBLE PRECISION      
+2      namedt      True              DATE
+...
 
-                                                    note  \
-                                                    0  per nw As previously announced, during the thi...
-                                                    1  (Nt 3) Acquistion of LGC Wireless Inc on Decem...
-                                                    2  MINNEAPOLIS--(BUSINESS WIRE)--November 19, 200...
-                                                    3  Per Note 3, " Sale of the API Business - On Fe...
-                                                    4  Per Item 2 (MDA), "The Company recorded a net ...
+>>> stocknames = db.get_table(library='crsp', table='stocknames', obs=10) 
+>>> stocknames.head()
+   permno  permco      namedt   nameenddt     cusip    ncusip ticker  \
+0  10000.0  7952.0  1986-01-07  1987-06-11  68391610  68391610  OMFGA
+1  10001.0  7953.0  1986-01-09  1993-11-21  36720410  39040610   GFGC
+2  10001.0  7953.0  1993-11-22  2008-02-04  36720410  29274A10   EWST
+3  10001.0  7953.0  2008-02-05  2009-08-03  36720410  29274A20   EWST
+4  10001.0  7953.0  2009-08-04  2009-12-17  36720410  29269V10   EGAS
+...
 
-                                                                             notetype                         subtype    datadate
-                                                                             0  FUNDAMENTAL                     DISC OPS                        2011-02-28
-                                                                             1  FUNDAMENTAL                     ACQUISITION                     2008-07-31
-                                                                             2  FUNDAMENTAL                     FISCAL YEAR CHANGE              2009-10-31
-                                                                             3  FUNDAMENTAL                     DISC OPS                        2008-03-31
-                                                                             4  FUNDAMENTAL                     MANAGEMENT DISCUSSION           2008-03-31
-
-                                                                             [5 rows x 11 columns]
