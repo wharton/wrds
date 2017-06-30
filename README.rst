@@ -26,7 +26,7 @@ Usage
 ~~~~~
 
 >>> import wrds
->>> db = wrds.Connecion()
+>>> db = wrds.Connection()
 Enter your credentials.
 Username: <your_username>
 Password: <your_password>
