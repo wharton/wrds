@@ -282,4 +282,3 @@ class Connection(object):
             sqlstmt = 'select {cols} from {schema}.{table} {obsstmt} OFFSET {offset};'.format(cols=cols, schema=library,
                     table=table, obsstmt=obsstmt, offset=offset)
             return self.raw_sql(sqlstmt, coerce_float=coerce_float, index_col=index_col, date_cols=date_cols)
-

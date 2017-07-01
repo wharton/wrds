@@ -1,11 +1,10 @@
 *.py[oc]
 __pycache__
 docs/build/
-<<<<<<< HEAD
 build/
 dist/
 *egg-info*
-=======
 *.ipynb
 .ipynb_checkpoints
->>>>>>> 6832978f626755b1a6e4f938d69413f659019ef7
+wrds.egg-info/
+*.log
