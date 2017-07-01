@@ -10,6 +10,8 @@ py3 = version_info[0] > 2
 
 if not py3:
     input = raw_input  # use raw_input in python 2
+    PermissionError = Exception
+    FileNotFoundError = Exception
 
 class NotSubscribedError(PermissionError):
     pass
