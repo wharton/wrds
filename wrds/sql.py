@@ -222,9 +222,8 @@ class Connection(object):
         passwd = passwd.replace(':', '\:')
         # Avoid clobbering the file if it exists
         if (os.path.isfile(pgfile)):
-            fd = open(pgfile, 'r')
-            lines = fd.readlines()
-            fd.close()
+            with open(pgfile, 'r') as fd:
+                lines = fd.readlines()
             newlines = []
             for line in lines:
                 # Handle escaped colons, preventing 
