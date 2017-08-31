@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import getpass
 import warnings
-
+import os
+import sys
+import stat
 import pandas as pd
 import sqlalchemy as sa
 
@@ -13,6 +15,7 @@ if not py3:
     PermissionError = Exception
     FileNotFoundError = Exception
 
+# Sane defaults
 WRDS_POSTGRES_HOST = 'wrds-pgdata.wharton.upenn.edu'
 WRDS_POSTGRES_PORT = 9737
 WRDS_POSTGRES_DB = 'wrds'
@@ -48,6 +51,7 @@ class Connection(object):
         Loading library list...
         Done
         """
+        self._password = ""
         # If user passed in any of these parameters, override defaults.
         self._username = (kwargs['wrds_username'] 
             if 'wrds_username' in kwargs else None)
@@ -133,6 +137,130 @@ class Connection(object):
             username = uname
         passwd = getpass.getpass('Enter your password:')
         return username, passwd
+
+
+    def create_pgpass_file(self):
+        """ 
+        Create a .pgpass file to store WRDS connection credentials..
+
+        Use the existing username and password if already connected to WRDS,
+         or prompt for that information if not.
+
+        The .pgpass file may contain connection entries for multiple databases,
+          so we take care not to overwrite any existing entries unless they 
+          have the same hostname, port, and database name.
+
+        On Windows, this file is actually called "pgpass.conf"
+          and is stored in the %APPDATA%\postgresql directory.
+        This must be handled differently.
+
+        Usage: 
+        >>> db = wrds.Connection()
+        >>> db.create_pgpass_file()
+        """
+        if (not self._username or not self._password):
+            self._username, self._password = self.__get_user_credentials()
+        if (sys.platform == 'win32'):
+            self.__create_pgpass_file_win32()
+        else:
+            self.__create_pgpass_file_unix()
+    
+    
+    def __create_pgpass_file_win32(self):
+        """ 
+        Create a pgpass.conf file on Windows.
+
+        Windows is different enough from everything else
+          as to require its own special way of doing things.
+        Save the pgpass file in %APPDATA%\postgresql as 'pgpass.conf'.
+        """
+        appdata = os.getenv('APPDATA')
+        pgdir = appdata + os.path.sep + 'postgresql'
+        # Can we at least assume %APPDATA% always exists? I'm seriously asking.
+        if (not os.path.exists(pgdir)):
+            os.mkdir(pgdir)
+        # Path exists, but is not a directory
+        elif (not os.path.isdir(pgdir)):
+            err = ("Cannot create directory {}: "
+                   "path exists but is not a directory")
+            raise FileExistsError(err.format(pgdir))
+        pgfile = pgdir + os.path.sep + 'pgpass.conf'
+        # Write the pgpass.conf file without clobbering
+        self.__write_pgpass_file(pgfile)
+        
+
+    def __create_pgpass_file_unix(self):
+        """
+        Create a .pgpass file on Unix-like operating systems.
+
+        Permissions on this file must also be set on Unix-like systems.
+        This function works on Mac OS X and Linux.
+        It should work on Solaris too, but this is untested.
+        """
+        homedir = os.getenv('HOME')
+        pgfile = homedir + os.path.sep + '.pgpass'
+        if (os.path.isfile(pgfile)):
+            # Set it to mode 600 (rw-------) so we can write to it
+            os.chmod(pgfile, stat.S_IRUSR|stat.S_IWUSR)
+        self.__write_pgpass_file(pgfile)
+        # Set it to mode 400 (r------) to protect it
+        os.chmod(pgfile, stat.S_IRUSR)
+
+
+    def __write_pgpass_file(self, pgfile):
+        """ 
+        Write the WRDS connection info to the pgpass file 
+          without clobbering other connection strings.
+        
+        Also escape any ':' characters in passwords,
+          as .pgpass requires.
+    
+        Works on both *nix and Win32.
+        """
+        pgpass = "{host}:{port}:{dbname}:{user}:{passwd}"
+        passwd = self._password
+        passwd = passwd.replace(':', '\:')
+        # Avoid clobbering the file if it exists
+        if (os.path.isfile(pgfile)):
+            fd = open(pgfile, 'r')
+            lines = fd.readlines()
+            fd.close()
+            newlines = []
+            for line in lines:
+                # Handle escaped colons, preventing 
+                #  split() from splitting on them.
+                # Saving to a new variable here absolves us
+                #  of having to re-replace the substituted ##COLON## later.
+                oldline = line.replace("""\:""", '##COLON##')
+                fields = oldline.split(':')
+                # When we find a line matching the hostname, port and dbname
+                #  we replace it with the new pgpass line.
+                # Surely we won't have any colons in the fields we're testing
+                if (fields[0] == self._hostname
+                    and int(fields[1]) == self._port
+                    and fields[2] == self._dbname):
+                    newline = pgpass.format(
+                        host=self._hostname,
+                        port=self._port,
+                        dbname=self._dbname,
+                        user=self._username,
+                        passwd=passwd)
+                    newlines.append(newline)
+                else:
+                    newlines.append(line)
+            lines = newlines
+        else:
+            line = pgpass.format(
+                host=self._hostname,
+                port=self._port,
+                dbname=self._dbname,
+                user=self._username,
+                passwd=passwd)
+            lines = [line]            
+        # I lied, we're totally clobbering it:
+        with open(pgfile, 'w') as fd:
+            fd.writelines(lines)
+            fd.write('\n')
 
 
     def __check_schema_perms(self, schema):
