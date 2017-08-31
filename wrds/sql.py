@@ -13,6 +13,10 @@ if not py3:
     PermissionError = Exception
     FileNotFoundError = Exception
 
+WRDS_POSTGRES_HOST = 'wrds-pgdata.wharton.upenn.edu'
+WRDS_POSTGRES_PORT = 9737
+WRDS_POSTGRES_DB = 'wrds'
+
 class NotSubscribedError(PermissionError):
     pass
 
@@ -20,13 +24,22 @@ class SchemaNotFoundError(FileNotFoundError):
     pass
 
 class Connection(object):
-    def __init__(self):
+    def __init__(self, **kwargs):
         """
-        Establish the connection to the database. This will use the .pgpass file if the user has set one up. If not,
-        it will ask the user for a username and password. It will also direct the user to information on setting up
-        .pgpass
+        Establish the connection to the database. 
 
-        Additionally, creating the instance will load a list of schemas the user has permission to access.
+        Optionally, the user may specify connection parameters:
+            *wrds_hostname*: WRDS database hostname
+            *wrds_port*: database connection port number
+            *wrds_dbname*: WRDS database name
+            *wrds_username*: WRDS username 
+
+        The constructor will use the .pgpass file if it exists. 
+        If not, it will ask the user for a username and password.
+        It will also direct the user to information on setting up .pgpass.
+
+        Additionally, creating the instance will load a list of schemas 
+          the user has permission to access.
 
         :return: None
 
@@ -35,23 +48,55 @@ class Connection(object):
         Loading library list...
         Done
         """
-        self.engine = sa.create_engine('postgresql://wrds-pgdata.wharton.upenn.edu:9737/wrds', connect_args={'sslmode': 'require'}) 
+        # If user passed in any of these parameters, override defaults.
+        self._username = (kwargs['wrds_username'] 
+            if 'wrds_username' in kwargs else None)
+        self._hostname = (kwargs['wrds_hostname'] 
+            if 'wrds_hostname' in kwargs else WRDS_POSTGRES_HOST)
+        self._port = (kwargs['wrds_port'] 
+            if 'wrds_port' in kwargs else WRDS_POSTGRES_PORT)
+        self._dbname = (kwargs['wrds_dbname'] 
+            if 'wrds_dbname' in kwargs else WRDS_POSTGRES_DB)
+        # If username was passed in, the URI is different.
+        if (self._username):
+            pguri = 'postgresql://{usr}@{host}:{port}/{dbname}'
+            self.engine = sa.create_engine(
+                pguri.format(
+                    usr=self._username,
+                    host=self._hostname,
+                    port=self._port,
+                    dbname=self._dbname),
+                connect_args={'sslmode': 'require'}) 
+        # No username passed in, but other parameters might have been.
+        else:
+            pguri = 'postgresql://{host}:{port}/{dbname}'
+            self.engine = sa.create_engine(
+                pguri.format(
+                    host=self._hostname,
+                    port=self._port,
+                    dbname=self._dbname),
+                connect_args={'sslmode': 'require'})
         try:
             self.engine.connect()
         except Exception as e:
-            uname = getpass.getuser()
-            username = input("Enter your WRDS username [{}]:".format(uname))
-            if not username:
-                username = uname
-            passwd = getpass.getpass('Enter your password:')
-            pghost = 'postgresql://{usr}:{pwd}@wrds-pgdata.wharton.upenn.edu:9737/wrds'
-            self.engine = sa.create_engine(pghost.format(
-                usr=username, pwd=passwd), connect_args={'sslmode':'require'})
-            warnings.warn("WRDS recommends setting up a .pgpass file. You can find more info here: https://www.postgresql.org/docs/9.2/static/libpq-pgpass.html.")
+            # These things should probably not be exported all over creation
+            self._username, self._password = self.__get_user_credentials()
+            pghost = 'postgresql://{usr}:{pwd}@{host}:{port}/{dbname}'
+            self.engine = sa.create_engine(
+                pghost.format(
+                    usr=self._username, 
+                    pwd=self._password, 
+                    host=self._hostname,
+                    port=self._port,
+                    dbname=self._dbname),
+                connect_args={'sslmode':'require'})
+            warnings.warn("WRDS recommends setting up a .pgpass file. You can find more info here: https://www.postgresql.org/docs/9.5/static/libpq-pgpass.html.")
             try:
                 self.engine.connect()
             except Exception as e:
                 print("There was an error with your password.")
+                self._username = None
+                self._password = None
                 raise e
 
         self.insp = sa.inspect(self.engine)
@@ -70,6 +115,25 @@ class Connection(object):
         cursor = self.engine.execute(query)
         self.schema_perm = [x[0] for x in cursor.fetchall() if not (x[0].endswith('_old') or x[0].endswith('_all'))]
         print("Done")
+
+
+    def __get_user_credentials(self):
+        """Prompt the user for their WRDS credentials.
+
+        Use the OS-level username as a default so the user
+          doesn't have to reenter it if they match.
+        Return both the username and the password.
+
+        >>> user,passwd = wrds.Connection.__get_user_credentials()
+        """
+
+        uname = getpass.getuser()
+        username = input("Enter your WRDS username [{}]:".format(uname))
+        if not username:
+            username = uname
+        passwd = getpass.getpass('Enter your password:')
+        return username, passwd
+
 
     def __check_schema_perms(self, schema):
         """
