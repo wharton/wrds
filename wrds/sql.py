@@ -53,14 +53,10 @@ class Connection(object):
         """
         self._password = ""
         # If user passed in any of these parameters, override defaults.
-        self._username = (kwargs['wrds_username'] 
-            if 'wrds_username' in kwargs else None)
-        self._hostname = (kwargs['wrds_hostname'] 
-            if 'wrds_hostname' in kwargs else WRDS_POSTGRES_HOST)
-        self._port = (kwargs['wrds_port'] 
-            if 'wrds_port' in kwargs else WRDS_POSTGRES_PORT)
-        self._dbname = (kwargs['wrds_dbname'] 
-            if 'wrds_dbname' in kwargs else WRDS_POSTGRES_DB)
+        self._username = kwargs.get('wrds_username', None)
+        self._hostname = kwargs.get('wrds_hostname', WRDS_POSTGRES_HOST)
+        self._port = kwargs.get('wrds_port', WRDS_POSTGRES_PORT)
+        self._dbname = kwargs.get('wrds_dbname', WRDS_POSTGRES_DB)
         # If username was passed in, the URI is different.
         if (self._username):
             pguri = 'postgresql://{usr}@{host}:{port}/{dbname}'
