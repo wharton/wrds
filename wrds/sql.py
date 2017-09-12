@@ -20,28 +20,31 @@ WRDS_POSTGRES_HOST = 'wrds-pgdata.wharton.upenn.edu'
 WRDS_POSTGRES_PORT = 9737
 WRDS_POSTGRES_DB = 'wrds'
 
+
 class NotSubscribedError(PermissionError):
     pass
+
 
 class SchemaNotFoundError(FileNotFoundError):
     pass
 
+
 class Connection(object):
     def __init__(self, **kwargs):
         """
-        Establish the connection to the database. 
+        Establish the connection to the database.
 
         Optionally, the user may specify connection parameters:
             *wrds_hostname*: WRDS database hostname
             *wrds_port*: database connection port number
             *wrds_dbname*: WRDS database name
-            *wrds_username*: WRDS username 
+            *wrds_username*: WRDS username
 
-        The constructor will use the .pgpass file if it exists. 
+        The constructor will use the .pgpass file if it exists.
         If not, it will ask the user for a username and password.
         It will also direct the user to information on setting up .pgpass.
 
-        Additionally, creating the instance will load a list of schemas 
+        Additionally, creating the instance will load a list of schemas
           the user has permission to access.
 
         :return: None
@@ -66,7 +69,7 @@ class Connection(object):
                     host=self._hostname,
                     port=self._port,
                     dbname=self._dbname),
-                connect_args={'sslmode': 'require'}) 
+                connect_args={'sslmode': 'require'})
         # No username passed in, but other parameters might have been.
         else:
             pguri = 'postgresql://{host}:{port}/{dbname}'
@@ -84,13 +87,17 @@ class Connection(object):
             pghost = 'postgresql://{usr}:{pwd}@{host}:{port}/{dbname}'
             self.engine = sa.create_engine(
                 pghost.format(
-                    usr=self._username, 
-                    pwd=self._password, 
+                    usr=self._username,
+                    pwd=self._password,
                     host=self._hostname,
                     port=self._port,
                     dbname=self._dbname),
-                connect_args={'sslmode':'require'})
-            warnings.warn("WRDS recommends setting up a .pgpass file. You can find more info here: https://www.postgresql.org/docs/9.5/static/libpq-pgpass.html.")
+                connect_args={'sslmode': 'require'})
+            warnings.warn(
+                "WRDS recommends setting up a .pgpass file. "
+                "You can find more info here: "
+                "https://www.postgresql.org"
+                "/docs/9.5/static/libpq-pgpass.html.")
             try:
                 self.engine.connect()
             except Exception as e:
@@ -109,13 +116,14 @@ class Connection(object):
         AND n.nspname <> 'information_schema'
         ) SELECT "name"
         from "names"
-        where pg_catalog.has_schema_privilege(current_user, "name", 'USAGE') = TRUE
-        ;
+        where pg_catalog.has_schema_privilege(current_user,
+            "name", 'USAGE') = TRUE;
         """
         cursor = self.engine.execute(query)
-        self.schema_perm = [x[0] for x in cursor.fetchall() if not (x[0].endswith('_old') or x[0].endswith('_all'))]
+        self.schema_perm = [x[0] for x in cursor.fetchall()
+                            if not (x[0].endswith('_old') or
+                                    x[0].endswith('_all'))]
         print("Done")
-
 
     def __get_user_credentials(self):
         """Prompt the user for their WRDS credentials.
@@ -126,7 +134,6 @@ class Connection(object):
 
         >>> user,passwd = wrds.Connection.__get_user_credentials()
         """
-
         uname = getpass.getuser()
         username = input("Enter your WRDS username [{}]:".format(uname))
         if not username:
@@ -134,23 +141,22 @@ class Connection(object):
         passwd = getpass.getpass('Enter your password:')
         return username, passwd
 
-
     def create_pgpass_file(self):
-        """ 
+        """
         Create a .pgpass file to store WRDS connection credentials..
 
         Use the existing username and password if already connected to WRDS,
          or prompt for that information if not.
 
         The .pgpass file may contain connection entries for multiple databases,
-          so we take care not to overwrite any existing entries unless they 
+          so we take care not to overwrite any existing entries unless they
           have the same hostname, port, and database name.
 
         On Windows, this file is actually called "pgpass.conf"
           and is stored in the %APPDATA%\postgresql directory.
         This must be handled differently.
 
-        Usage: 
+        Usage:
         >>> db = wrds.Connection()
         >>> db.create_pgpass_file()
         """
@@ -160,10 +166,9 @@ class Connection(object):
             self.__create_pgpass_file_win32()
         else:
             self.__create_pgpass_file_unix()
-    
-    
+
     def __create_pgpass_file_win32(self):
-        """ 
+        """
         Create a pgpass.conf file on Windows.
 
         Windows is different enough from everything else
@@ -183,7 +188,6 @@ class Connection(object):
         pgfile = pgdir + os.path.sep + 'pgpass.conf'
         # Write the pgpass.conf file without clobbering
         self.__write_pgpass_file(pgfile)
-        
 
     def __create_pgpass_file_unix(self):
         """
@@ -197,20 +201,19 @@ class Connection(object):
         pgfile = homedir + os.path.sep + '.pgpass'
         if (os.path.isfile(pgfile)):
             # Set it to mode 600 (rw-------) so we can write to it
-            os.chmod(pgfile, stat.S_IRUSR|stat.S_IWUSR)
+            os.chmod(pgfile, stat.S_IRUSR | stat.S_IWUSR)
         self.__write_pgpass_file(pgfile)
         # Set it to mode 400 (r------) to protect it
         os.chmod(pgfile, stat.S_IRUSR)
 
-
     def __write_pgpass_file(self, pgfile):
-        """ 
-        Write the WRDS connection info to the pgpass file 
+        """
+        Write the WRDS connection info to the pgpass file
           without clobbering other connection strings.
-        
+
         Also escape any ':' characters in passwords,
           as .pgpass requires.
-    
+
         Works on both *nix and Win32.
         """
         pgpass = "{host}:{port}:{dbname}:{user}:{passwd}"
@@ -222,18 +225,18 @@ class Connection(object):
                 lines = fd.readlines()
             newlines = []
             for line in lines:
-                # Handle escaped colons, preventing 
+                # Handle escaped colons, preventing
                 #  split() from splitting on them.
                 # Saving to a new variable here absolves us
                 #  of having to re-replace the substituted ##COLON## later.
                 oldline = line.replace("""\:""", '##COLON##')
                 fields = oldline.split(':')
-                # When we find a line matching the hostname, port and dbname
+                # On finding a line matching the hostname, port and dbname
                 #  we replace it with the new pgpass line.
-                # Surely we won't have any colons in the fields we're testing
-                if (fields[0] == self._hostname
-                    and int(fields[1]) == self._port
-                    and fields[2] == self._dbname):
+                # Surely we won't have any colons in these fields :^)
+                if (fields[0] == self._hostname and
+                        int(fields[1]) == self._port and
+                        fields[2] == self._dbname):
                     newline = pgpass.format(
                         host=self._hostname,
                         port=self._port,
@@ -251,33 +254,35 @@ class Connection(object):
                 dbname=self._dbname,
                 user=self._username,
                 passwd=passwd)
-            lines = [line]            
+            lines = [line]
         # I lied, we're totally clobbering it:
         with open(pgfile, 'w') as fd:
             fd.writelines(lines)
             fd.write('\n')
 
-
     def __check_schema_perms(self, schema):
         """
-            Check the permissions of the schema. Raise permissions error if user does not have
-            access. Raise other error if the schema does not exist.
+            Check the permissions of the schema.
+            Raise permissions error if user does not have access.
+            Raise other error if the schema does not exist.
 
             Else, return True
-            
+
             :param schema: Postgres schema name.
             :rtype: bool
-            
+
         """
-        
         if schema in self.schema_perm:
             return True
         else:
             if schema in self.insp.get_schema_names():
-                raise NotSubscribedError("You do not have permission to access the {} library".format(schema))
+                raise NotSubscribedError(
+                    "You do not have permission to access"
+                    "the {} library".format(schema))
             else:
-                raise SchemaNotFoundError("The {} library is not found.".format(schema)) 
-    
+                raise SchemaNotFoundError(
+                    "The {} library is not found.".format(schema))
+
     def list_libraries(self):
         """
             Return all the libraries (schemas) the user can access.
@@ -309,16 +314,23 @@ class Connection(object):
         """
         Internal function for getting the schema based on a view
         """
-        sql_code = """SELECT distinct(source_ns.nspname) as source_schema
+        sql_code = """SELECT distinct(source_ns.nspname) AS source_schema
                       FROM pg_depend
-                      JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
-                      JOIN pg_class as dependent_view ON pg_rewrite.ev_class = dependent_view.oid
-                      JOIN pg_class as source_table ON pg_depend.refobjid = source_table.oid
-                      JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid
-                      AND pg_depend.refobjsubid = pg_attribute.attnum
-                      JOIN pg_namespace dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
-                      JOIN pg_namespace source_ns ON source_ns.oid = source_table.relnamespace
-                      where dependent_ns.nspname = '{schema}' and dependent_view.relname = '{view}';
+                      JOIN pg_rewrite
+                        ON pg_depend.objid = pg_rewrite.oid
+                      JOIN pg_class as dependent_view
+                        ON pg_rewrite.ev_class = dependent_view.oid
+                      JOIN pg_class as source_table
+                        ON pg_depend.refobjid = source_table.oid
+                      JOIN pg_attribute
+                        ON pg_depend.refobjid = pg_attribute.attrelid
+                          AND pg_depend.refobjsubid = pg_attribute.attnum
+                      JOIN pg_namespace dependent_ns
+                        ON dependent_ns.oid = dependent_view.relnamespace
+                      JOIN pg_namespace source_ns
+                        ON source_ns.oid = source_table.relnamespace
+                      WHERE dependent_ns.nspname = '{schema}'
+                        AND dependent_view.relname = '{view}';
                     """.format(schema=schema, view=table)
         if self.__check_schema_perms(schema):
             result = self.engine.execute(sql_code)
@@ -326,7 +338,8 @@ class Connection(object):
 
     def describe_table(self, library, table):
         """
-            Takes the library and the table and describes all the columns in that table.
+            Takes the library and the table and describes all the columns
+              in that table.
             Includes Column Name, Column Type, Nullable?.
 
             :param library: Postgres schema name.
@@ -346,34 +359,43 @@ class Connection(object):
         """
         rows = self.get_row_count(library, table)
         print("Approximately {} rows in {}.{}.".format(rows, library, table))
-        table_info = pd.DataFrame.from_dict(self.insp.get_columns(table, schema=library))
+        table_info = pd.DataFrame.from_dict(
+            self.insp.get_columns(table, schema=library))
         return table_info[['name', 'nullable', 'type']]
 
     def get_row_count(self, library, table):
         """
-            Uses the library and table to get the approximate row count for the table. 
-            
+            Uses the library and table to get the approximate
+              row count for the table.
+
             :param library: Postgres schema name.
             :param table: Postgres table name.
 
             :rtype: int
-    
+
             Usage::
             >>> db.get_row_count('wrdssec', 'dforms')
             16378400
         """
         schema = self.__get_schema_for_view(library, table)
-        if schema: 
+        if schema:
             sqlstmt = """
-                select reltuples from pg_class r JOIN pg_namespace n on (r.relnamespace = n.oid)
-                where r.relkind = 'r' and n.nspname = '{}' and r.relname = '{}';
+                SELECT reltuples
+                  FROM pg_class r
+                  JOIN pg_namespace n
+                    ON (r.relnamespace = n.oid)
+                  WHERE r.relkind = 'r'
+                    AND n.nspname = '{}'
+                    AND r.relname = '{}';
                 """.format(schema, table)
 
             try:
                 result = self.engine.execute(sqlstmt)
                 return int(result.fetchone()[0])
             except Exception as e:
-                print("There was a problem with retrieving the row count: {}".format(e))
+                print(
+                    "There was a problem with retrieving"
+                    "the row count: {}".format(e))
                 return 0
         else:
             print("There was a problem with retrieving the schema")
@@ -389,12 +411,16 @@ class Connection(object):
                 to floating point. Can result in loss of precision.
             :param date_cols: (optional) list or dict, default: None
                 - List of column names to parse as date
-                - Dict of ``{column_name: format string}`` where format string is
-                  strftime compatible in case of parsing string times or is one of
-                  (D, s, ns, ms, us) in case of parsing integer timestamps
-                - Dict of ``{column_name: arg dict}``, where the arg dict corresponds
-                  to the keyword arguments of :func:`pandas.to_datetime`
-            :param index_col: (optional) string or list of strings, default: None
+                - Dict of ``{column_name: format string}`` where
+                    format string is:
+                      strftime compatible in case of parsing string times or
+                      is one of (D, s, ns, ms, us) in case of parsing
+                        integer timestamps
+                - Dict of ``{column_name: arg dict}``,
+                    where the arg dict corresponds to the keyword arguments of
+                      :func:`pandas.to_datetime`
+            :param index_col: (optional) string or list of strings,
+              default: None
                 Column(s) to set as index(MultiIndex)
 
             :rtype: pandas.DataFrame
@@ -411,11 +437,18 @@ class Connection(object):
                 ...
         """
         try:
-            return pd.read_sql_query(sql, self.engine, coerce_float=coerce_float, parse_dates=date_cols, index_col=index_col)
+            return pd.read_sql_query(
+                sql,
+                self.engine,
+                coerce_float=coerce_float,
+                parse_dates=date_cols,
+                index_col=index_col)
         except sa.exc.ProgrammingError as e:
             raise e
 
-    def get_table(self, library, table, obs=-1, offset=0, columns=None, coerce_float=None, index_col=None, date_cols=None):
+    def get_table(self, library, table, obs=-1, offset=0,
+                  columns=None, coerce_float=None, index_col=None,
+                  date_cols=None):
         """
             Creates a data frame from an entire table in the database.
 
@@ -423,11 +456,11 @@ class Connection(object):
             :param library: Postgres schema name.
 
             :param obs: (optional) int, default: -1
-                Specifies the number of observations to pull from the table. An integer
-                less than 0 will return the entire table.
+                Specifies the number of observations to pull from the table.
+                An integer less than 0 will return the entire table.
             :param offset: (optional) int, default: 0
-                Specifies the starting point for the query. An offset of 0 will start
-                selecting from the beginning.
+                Specifies the starting point for the query.
+                An offset of 0 will start selecting from the beginning.
             :param columns: (optional) list or tuple, default: None
                 Specifies the columns to be included in the output data frame.
             :param coerce_float: (optional) boolean, default: True
@@ -435,12 +468,16 @@ class Connection(object):
                 to floating point. Can result in loss of precision.
             :param date_cols: (optional) list or dict, default: None
                 - List of column names to parse as date
-                - Dict of ``{column_name: format string}`` where format string is
-                  strftime compatible in case of parsing string times or is one of
-                  (D, s, ns, ms, us) in case of parsing integer timestamps
-                - Dict of ``{column_name: arg dict}``, where the arg dict corresponds
-                  to the keyword arguments of :func:`pandas.to_datetime`
-            :param index_col: (optional) string or list of strings, default: None
+                - Dict of ``{column_name: format string}``
+                    where format string is
+                      strftime compatible in case of parsing string times or
+                      is one of (D, s, ns, ms, us) in case of parsing
+                        integer timestamps
+                - Dict of ``{column_name: arg dict}``,
+                    where the arg dict corresponds to the keyword arguments of
+                      :func:`pandas.to_datetime`
+            :param index_col: (optional) string or list of strings,
+              default: None
                 Column(s) to set as index(MultiIndex)
 
             :rtype: pandas.DataFrame
@@ -466,6 +503,15 @@ class Connection(object):
         else:
             cols = ','.join(columns)
         if self.__check_schema_perms(library):
-            sqlstmt = 'select {cols} from {schema}.{table} {obsstmt} OFFSET {offset};'.format(cols=cols, schema=library,
-                    table=table, obsstmt=obsstmt, offset=offset)
-            return self.raw_sql(sqlstmt, coerce_float=coerce_float, index_col=index_col, date_cols=date_cols)
+            sqlstmt = ('SELECT {cols} FROM {schema}.{table} '
+                       '{obsstmt} OFFSET {offset};'.format(
+                            cols=cols,
+                            schema=library,
+                            table=table,
+                            obsstmt=obsstmt,
+                            offset=offset))
+            return self.raw_sql(
+                sqlstmt,
+                coerce_float=coerce_float,
+                index_col=index_col,
+                date_cols=date_cols)
