@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import getpass
-import warnings
 import os
 import sys
 import stat
@@ -30,9 +29,10 @@ class SchemaNotFoundError(FileNotFoundError):
 
 
 class Connection(object):
-    def __init__(self, **kwargs):
+    def __init__(self, autoconnect=True, **kwargs):
         """
-        Establish the connection to the database.
+        Set up the connection to the WRDS database.
+        By default, also establish the connection to the database.
 
         Optionally, the user may specify connection parameters:
             *wrds_hostname*: WRDS database hostname
@@ -79,6 +79,12 @@ class Connection(object):
                     port=self._port,
                     dbname=self._dbname),
                 connect_args={'sslmode': 'require'})
+        if (autoconnect):
+            self.connect()
+            self.load_library_list()
+
+    def connect(self):
+        """ Make a connection to the WRDS database. """
         try:
             self.engine.connect()
         except Exception as e:
@@ -93,11 +99,10 @@ class Connection(object):
                     port=self._port,
                     dbname=self._dbname),
                 connect_args={'sslmode': 'require'})
-            warnings.warn(
-                "WRDS recommends setting up a .pgpass file. "
-                "You can find more info here: "
-                "https://www.postgresql.org"
-                "/docs/9.5/static/libpq-pgpass.html.")
+            print("WRDS recommends setting up a .pgpass file.")
+            print("You can find more info here:")
+            print("https://www.postgresql.org"
+                  "/docs/9.5/static/libpq-pgpass.html.")
             try:
                 self.engine.connect()
             except Exception as e:
@@ -106,18 +111,21 @@ class Connection(object):
                 self._password = None
                 raise e
 
+    def load_library_list(self):
+        """ Load the list of Postgres schemata (c.f. SAS LIBNAMEs)
+              the user has permission to access. """
         self.insp = sa.inspect(self.engine)
         print("Loading library list...")
         query = """
         WITH RECURSIVE "names"("name") AS (
-        SELECT n.nspname AS "name"
-        FROM pg_catalog.pg_namespace n
-        WHERE n.nspname !~ '^pg_'
-        AND n.nspname <> 'information_schema'
-        ) SELECT "name"
-        from "names"
-        where pg_catalog.has_schema_privilege(current_user,
-            "name", 'USAGE') = TRUE;
+            SELECT n.nspname AS "name"
+                FROM pg_catalog.pg_namespace n
+                WHERE n.nspname !~ '^pg_'
+                    AND n.nspname <> 'information_schema')
+            SELECT "name"
+                FROM "names"
+                WHERE pg_catalog.has_schema_privilege(
+                    current_user, "name", 'USAGE') = TRUE;
         """
         cursor = self.engine.execute(query)
         self.schema_perm = [x[0] for x in cursor.fetchall()
