@@ -17,7 +17,10 @@ packages = [
 requires = [
     'pandas',
     'sqlalchemy',
-    'psycopg2'
+    'psycopg2',
+     # mock may need to be included if folks
+     # want to run tests w/Py2
+    'mock'
 ]
 
 setup(
@@ -48,5 +51,5 @@ setup(
            'Topic :: Scientific/Engineering :: Information Analysis',
         ),
 )
-        
+
 

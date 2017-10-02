@@ -2,7 +2,10 @@
 
 import wrds
 import unittest
-import unittest.mock as mock
+try:
+    import unittest.mock as mock
+except ImportError:
+    from mock import mock
 import sys
 
 class TestInitMethod(unittest.TestCase):
