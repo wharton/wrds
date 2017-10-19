@@ -2,7 +2,7 @@ WRDS Python Data Access Library
 ===============================
 
 WRDS-Py is a library for extracting data from WRDS data sources and getting it into Pandas.
-The library allows users to access SAS/SHARE and extract data using SQL statements. The data
+The library allows users to access data from WRDS and extract data using SQL statements. The data
 that is returned is read into a Pandas data frame.
 
 Installation
