@@ -34,7 +34,7 @@ Password: <your_password>
 ['audit', 'bank', 'block', 'bvd', 'bvdtrial', 'cboe', ...]
 >>> db.list_tables(library='crsp')
 ['aco_amda', 'aco_imda', 'aco_indfnta', 'aco_indfntq', ...]
->>> db.describe_table(library='csrp', table='stocknames')
+>>> db.describe_table(library='crsp', table='stocknames')
 Approximately 58957 rows in crsp.stocknames.
        name    nullable              type
 0      permno      True  DOUBLE PRECISION      
