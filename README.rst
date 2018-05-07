@@ -2,7 +2,7 @@ WRDS Python Data Access Library
 ===============================
 
 WRDS-Py is a library for extracting data from WRDS data sources and getting it into Pandas.
-The library allows users to access SAS/SHARE and extract data using SQL statements. The data
+The library allows users to access data from WRDS and extract data using SQL statements. The data
 that is returned is read into a Pandas data frame.
 
 Installation
@@ -34,7 +34,7 @@ Password: <your_password>
 ['audit', 'bank', 'block', 'bvd', 'bvdtrial', 'cboe', ...]
 >>> db.list_tables(library='crsp')
 ['aco_amda', 'aco_imda', 'aco_indfnta', 'aco_indfntq', ...]
->>> db.describe_table(library='csrp', table='stocknames')
+>>> db.describe_table(library='crsp', table='stocknames')
 Approximately 58957 rows in crsp.stocknames.
        name    nullable              type
 0      permno      True  DOUBLE PRECISION      
