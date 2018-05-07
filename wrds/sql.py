@@ -316,7 +316,8 @@ class Connection(object):
             ['wciklink_gvkey', 'dforms', 'wciklink_cusip', 'wrds_forms', ...]
         """
         if self.__check_schema_perms(library):
-            return self.insp.get_view_names(schema=library)
+            output = self.insp.get_view_names(schema=library) + self.insp.get_foreign_table_names(schema=library)
+            return output
 
     def __get_schema_for_view(self, schema, table):
         """
@@ -385,14 +386,18 @@ class Connection(object):
             >>> db.get_row_count('wrdssec', 'dforms')
             16378400
         """
-        schema = self.__get_schema_for_view(library, table)
+        if 'taq' in library:
+            schema = library
+            print("The row count will return 0 due to the structure of TAQ")
+        else:
+            schema = self.__get_schema_for_view(library, table)
         if schema:
             sqlstmt = """
                 SELECT reltuples
                   FROM pg_class r
                   JOIN pg_namespace n
                     ON (r.relnamespace = n.oid)
-                  WHERE r.relkind = 'r'
+                  WHERE r.relkind in ('r', 'f')
                     AND n.nspname = '{}'
                     AND r.relname = '{}';
                 """.format(schema, table)
