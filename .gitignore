@@ -8,3 +8,4 @@ dist/
 .ipynb_checkpoints
 wrds.egg-info/
 *.log
+.eggs/
