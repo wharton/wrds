@@ -305,7 +305,7 @@ class Connection(object):
 
     def list_tables(self, library):
         """
-            Returns a list of all the tables within a schema.
+            Returns a list of all the views/tables/foreign tables within a schema.
 
             :param library: Postgres schema name.
 
@@ -316,7 +316,9 @@ class Connection(object):
             ['wciklink_gvkey', 'dforms', 'wciklink_cusip', 'wrds_forms', ...]
         """
         if self.__check_schema_perms(library):
-            output = self.insp.get_view_names(schema=library) + self.insp.get_foreign_table_names(schema=library)
+            output = (self.insp.get_view_names(schema=library)
+                      + self.insp.get_table_names(schema=library) 
+                      + self.insp.get_foreign_table_names(schema=library))
             return output
 
     def __get_schema_for_view(self, schema, table):
