@@ -5,6 +5,7 @@ import sys
 import stat
 import pandas as pd
 import sqlalchemy as sa
+from wrds import __version__ as wrds_version
 
 from sys import version_info
 py3 = version_info[0] > 2
@@ -14,11 +15,21 @@ if not py3:
     PermissionError = Exception
     FileNotFoundError = Exception
 
+appname = '{0} python {1}.{2}.{3}/wrds {4}'.format(
+             sys.platform,
+             version_info[0],
+             version_info[1],
+             version_info[2],
+             wrds_version)
+
+
 # Sane defaults
 WRDS_POSTGRES_HOST = 'wrds-pgdata.wharton.upenn.edu'
 WRDS_POSTGRES_PORT = 9737
 WRDS_POSTGRES_DB = 'wrds'
-
+WRDS_CONNECT_ARGS = {'sslmode':'require',
+                     'application_name': appname
+                    }
 
 class NotSubscribedError(PermissionError):
     pass
@@ -60,6 +71,8 @@ class Connection(object):
         self._hostname = kwargs.get('wrds_hostname', WRDS_POSTGRES_HOST)
         self._port = kwargs.get('wrds_port', WRDS_POSTGRES_PORT)
         self._dbname = kwargs.get('wrds_dbname', WRDS_POSTGRES_DB)
+        self._connect_args = kwargs.get('wrds_connect_args', WRDS_CONNECT_ARGS)
+                              
         # If username was passed in, the URI is different.
         if (self._username):
             pguri = 'postgresql://{usr}@{host}:{port}/{dbname}'
@@ -69,7 +82,7 @@ class Connection(object):
                     host=self._hostname,
                     port=self._port,
                     dbname=self._dbname),
-                connect_args={'sslmode': 'require'})
+                connect_args=self._connect_args)
         # No username passed in, but other parameters might have been.
         else:
             pguri = 'postgresql://{host}:{port}/{dbname}'
@@ -78,7 +91,7 @@ class Connection(object):
                     host=self._hostname,
                     port=self._port,
                     dbname=self._dbname),
-                connect_args={'sslmode': 'require'})
+                connect_args=self._connect_args)
         if (autoconnect):
             self.connect()
             self.load_library_list()
@@ -98,7 +111,7 @@ class Connection(object):
                     host=self._hostname,
                     port=self._port,
                     dbname=self._dbname),
-                connect_args={'sslmode': 'require'})
+                connect_args=self._connect_args)
             print("WRDS recommends setting up a .pgpass file.")
             print("You can find more info here:")
             print("https://www.postgresql.org"
