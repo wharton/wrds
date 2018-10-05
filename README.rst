@@ -50,5 +50,15 @@ Approximately 58957 rows in crsp.stocknames.
 2  10001.0  7953.0  1993-11-22  2008-02-04  36720410  29274A10   EWST
 3  10001.0  7953.0  2008-02-05  2009-08-03  36720410  29274A20   EWST
 4  10001.0  7953.0  2009-08-04  2009-12-17  36720410  29269V10   EGAS
-...
 
+>>> db.close()  # Close the connection to the database...
+
+>>> with wrds.Connection() as db:  # You can use a context manager
+...    stocknames = db.get_table(library='crsp', table='stocknames', obs=10)
+>>> stocknames.head()
+   permno  permco      namedt   nameenddt     cusip    ncusip ticker  \
+0  10000.0  7952.0  1986-01-07  1987-06-11  68391610  68391610  OMFGA
+1  10001.0  7953.0  1986-01-09  1993-11-21  36720410  39040610   GFGC
+2  10001.0  7953.0  1993-11-22  2008-02-04  36720410  29274A10   EWST
+3  10001.0  7953.0  2008-02-05  2009-08-03  36720410  29274A20   EWST
+4  10001.0  7953.0  2009-08-04  2009-12-17  36720410  29269V10   EGAS
