@@ -16,20 +16,20 @@ if not py3:
     FileNotFoundError = Exception
 
 appname = '{0} python {1}.{2}.{3}/wrds {4}'.format(
-             sys.platform,
-             version_info[0],
-             version_info[1],
-             version_info[2],
-             wrds_version)
+          sys.platform,
+          version_info[0],
+          version_info[1],
+          version_info[2],
+          wrds_version)
 
 
 # Sane defaults
 WRDS_POSTGRES_HOST = 'wrds-pgdata.wharton.upenn.edu'
 WRDS_POSTGRES_PORT = 9737
 WRDS_POSTGRES_DB = 'wrds'
-WRDS_CONNECT_ARGS = {'sslmode':'require',
+WRDS_CONNECT_ARGS = {'sslmode': 'require',
                      'application_name': appname
-                    }
+                     }
 
 class NotSubscribedError(PermissionError):
     pass
@@ -72,7 +72,7 @@ class Connection(object):
         self._port = kwargs.get('wrds_port', WRDS_POSTGRES_PORT)
         self._dbname = kwargs.get('wrds_dbname', WRDS_POSTGRES_DB)
         self._connect_args = kwargs.get('wrds_connect_args', WRDS_CONNECT_ARGS)
-                              
+
         # If username was passed in, the URI is different.
         if (self._username):
             pguri = 'postgresql://{usr}@{host}:{port}/{dbname}'
@@ -99,7 +99,7 @@ class Connection(object):
     def connect(self):
         """ Make a connection to the WRDS database. """
         try:
-            self.engine.connect()
+            self.connection = self.engine.connect()
         except Exception as e:
             # These things should probably not be exported all over creation
             self._username, self._password = self.__get_user_credentials()
@@ -117,17 +117,30 @@ class Connection(object):
             print("https://www.postgresql.org"
                   "/docs/9.5/static/libpq-pgpass.html.")
             try:
-                self.engine.connect()
+                self.connection = self.engine.connect()
             except Exception as e:
                 print("There was an error with your password.")
                 self._username = None
                 self._password = None
                 raise e
 
+    def close(self):
+        """
+            Close the connection to the database.
+        """
+        self.connection.close()
+
+    def __enter__(self):
+        self.connect()
+        return self
+
+    def __exit__(self, *args):
+        self.close()
+
     def load_library_list(self):
         """ Load the list of Postgres schemata (c.f. SAS LIBNAMEs)
               the user has permission to access. """
-        self.insp = sa.inspect(self.engine)
+        self.insp = sa.inspect(self.connection)
         print("Loading library list...")
         query = """
         WITH RECURSIVE "names"("name") AS (
@@ -140,7 +153,7 @@ class Connection(object):
                 WHERE pg_catalog.has_schema_privilege(
                     current_user, "name", 'USAGE') = TRUE;
         """
-        cursor = self.engine.execute(query)
+        cursor = self.connection.execute(query)
         self.schema_perm = [x[0] for x in cursor.fetchall()
                             if not (x[0].endswith('_old') or
                                     x[0].endswith('_all'))]
@@ -330,7 +343,7 @@ class Connection(object):
         """
         if self.__check_schema_perms(library):
             output = (self.insp.get_view_names(schema=library)
-                      + self.insp.get_table_names(schema=library) 
+                      + self.insp.get_table_names(schema=library)
                       + self.insp.get_foreign_table_names(schema=library))
             return output
 
@@ -357,7 +370,7 @@ class Connection(object):
                         AND dependent_view.relname = '{view}';
                     """.format(schema=schema, view=table)
         if self.__check_schema_perms(schema):
-            result = self.engine.execute(sql_code)
+            result = self.connection.execute(sql_code)
             return result.fetchone()[0]
 
     def describe_table(self, library, table):
@@ -418,7 +431,7 @@ class Connection(object):
                 """.format(schema, table)
 
             try:
-                result = self.engine.execute(sqlstmt)
+                result = self.connection.execute(sqlstmt)
                 return int(result.fetchone()[0])
             except Exception as e:
                 print(
@@ -467,7 +480,7 @@ class Connection(object):
         try:
             return pd.read_sql_query(
                 sql,
-                self.engine,
+                self.connection,
                 coerce_float=coerce_float,
                 parse_dates=date_cols,
                 index_col=index_col)
@@ -531,13 +544,12 @@ class Connection(object):
         else:
             cols = ','.join(columns)
         if self.__check_schema_perms(library):
-            sqlstmt = ('SELECT {cols} FROM {schema}.{table} '
-                       '{obsstmt} OFFSET {offset};'.format(
-                            cols=cols,
-                            schema=library,
-                            table=table,
-                            obsstmt=obsstmt,
-                            offset=offset))
+            sqlstmt = ('SELECT {cols} FROM {schema}.{table} {obsstmt} OFFSET {offset};'.format(
+                       cols=cols,
+                       schema=library,
+                       table=table,
+                       obsstmt=obsstmt,
+                       offset=offset))
             return self.raw_sql(
                 sqlstmt,
                 coerce_float=coerce_float,
