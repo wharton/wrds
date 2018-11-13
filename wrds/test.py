@@ -137,12 +137,12 @@ class TestRawSqlMethod(unittest.TestCase):
     def test_rawsql_takes_unparameterized_sql(self, mock_pd, mock_sa):
         sql = "SELECT * FROM information_schema.tables LIMIT 1"
         self.t.raw_sql(sql)
-        mock_pd.read_sql_query.assert_called_once_with(sql, self.t.connection, coerce_float=True, index_col=None, parse_dates=None)
+        mock_pd.read_sql_query.assert_called_once_with(sql, self.t.connection, coerce_float=True, index_col=None, parse_dates=None, params=None)
 
     @mock.patch('wrds.sql.sa')
     @mock.patch('wrds.sql.pd')
     def test_rawsql_takes_parameterized_sql(self, mock_pd, mock_sa):
-        sql = "SELECT * FROM information_schema.tables where table_name = :tablename LIMIT 1"
+        sql = "SELECT * FROM information_schema.tables where table_name = %(tablename)s LIMIT 1"
         tablename = "pg_stat_activity"
         self.t.engine = mock.Mock()
         self.t.raw_sql(sql, params=tablename)
