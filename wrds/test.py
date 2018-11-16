@@ -2,6 +2,7 @@
 
 import wrds
 import unittest
+from copy import deepcopy
 try:
     import unittest.mock as mock
 except ImportError:
@@ -22,7 +23,9 @@ class TestInitMethod(unittest.TestCase):
             dbname=wrds.sql.WRDS_POSTGRES_DB)
         mock_sa.create_engine.assert_called_with(
             connstring,
-            connect_args={'sslmode': 'require'})
+            connect_args={'sslmode': 'require',
+                          'application_name': wrds.sql.appname})
+
 
     @mock.patch('wrds.sql.sa')
     def test_init_calls_sqlalchemy_create_engine_custom(self, mock_sa):
@@ -36,7 +39,8 @@ class TestInitMethod(unittest.TestCase):
         t = wrds.Connection(wrds_username=username)
         mock_sa.create_engine.assert_called_with(
             connstring,
-            connect_args={'sslmode': 'require'})
+            connect_args={'sslmode': 'require',
+                          'application_name': wrds.sql.appname})
 
     @mock.patch('wrds.sql.Connection.load_library_list')
     @mock.patch('wrds.sql.Connection.connect')
@@ -105,7 +109,44 @@ class TestConnectMethod(unittest.TestCase):
         self.t.connect()
         mock_sa.create_engine.assert_called_with(
             connstring,
-            connect_args={'sslmode': 'require'})
+            connect_args={'sslmode': 'require',
+                          'application_name': wrds.sql.appname})
+
+
+class TestRawSqlMethod(unittest.TestCase):
+    """ Test the wrds.Connection.raw_sql method. 
+
+        wrds.Connection.raw_sql() should be able to take
+          'normal' and parameterized SQL, 
+          and throw an error if not all parameters are supplied.
+    """
+    def setUp(self):
+        self.t = wrds.Connection(autoconnect=False)
+        self.t._hostname = 'wrds.test.private'
+        self.t._port = 12345
+        self.t._username = 'faketestusername'
+        self.t._password = 'faketestuserpass'
+        self.t._dbname = 'testdbname'
+        self.t._Connection__get_user_credentials = mock.Mock()
+        self.t._Connection__get_user_credentials.return_value = (self.t._username, self.t._password)
+        self.t.connection = mock.Mock()
+        self.t.engine = mock.Mock()
+
+    @mock.patch('wrds.sql.sa')
+    @mock.patch('wrds.sql.pd')
+    def test_rawsql_takes_unparameterized_sql(self, mock_pd, mock_sa):
+        sql = "SELECT * FROM information_schema.tables LIMIT 1"
+        self.t.raw_sql(sql)
+        mock_pd.read_sql_query.assert_called_once_with(sql, self.t.connection, coerce_float=True, index_col=None, parse_dates=None, params=None)
+
+    @mock.patch('wrds.sql.sa')
+    @mock.patch('wrds.sql.pd')
+    def test_rawsql_takes_parameterized_sql(self, mock_pd, mock_sa):
+        sql = "SELECT * FROM information_schema.tables where table_name = %(tablename)s LIMIT 1"
+        tablename = "pg_stat_activity"
+        self.t.engine = mock.Mock()
+        self.t.raw_sql(sql, params=tablename)
+        mock_pd.read_sql_query.assert_called_once_with(sql, self.t.connection, coerce_float=True, index_col=None, parse_dates=None, params=tablename)
 
 
 class TestCreatePgpassFile(unittest.TestCase):

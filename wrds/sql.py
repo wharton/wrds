@@ -442,7 +442,7 @@ class Connection(object):
             print("There was a problem with retrieving the schema")
             return None
 
-    def raw_sql(self, sql, coerce_float=True, date_cols=None, index_col=None):
+    def raw_sql(self, sql, coerce_float=True, date_cols=None, index_col=None, params=None):
         """
             Queries the database using a raw SQL string.
 
@@ -463,10 +463,12 @@ class Connection(object):
             :param index_col: (optional) string or list of strings,
               default: None
                 Column(s) to set as index(MultiIndex)
+            :param params: parameters to SQL query, if parameterized.
 
             :rtype: pandas.DataFrame
 
             Usage ::
+            # Basic Usage
             >>> data = db.raw_sql('select cik, fdate, coname from wrdssec_all.dforms;', date_cols=['fdate'], index_col='cik')
             >>> data.head()
                 cik        fdate       coname
@@ -476,6 +478,17 @@ class Connection(object):
                 0000000003 1998-03-02  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
                 0000000003 1998-03-10  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y..
                 ...
+
+            # Parameterized SQL query
+            >>> parm = {'syms': ('A', 'AA', 'AAPL'), 'num_shares': 50000}
+            >>> data = db.raw_sql('select * from taqmsec.ctm_20030910 where sym_root in %(syms)s and size > %(num_shares)s', params=parm)
+            >>> data.head()
+                      date           time_m ex sym_root sym_suffix tr_scond      size   price tr_stopind tr_corr     tr_seqnum tr_source tr_rf
+                2003-09-10  11:02:09.485000  T        A       None     None  211400.0  25.350          N      00  1.929952e+15         C  None
+                2003-09-10  11:04:29.508000  N        A       None     None   55500.0  25.180          N      00  1.929952e+15         C  None
+                2003-09-10  15:08:21.155000  N        A       None     None   50500.0  24.470          N      00  1.929967e+15         C  None
+                2003-09-10  16:10:35.522000  T        A       None        B   71900.0  24.918          N      00  1.929970e+15         C  None
+                2003-09-10  09:35:20.709000  N       AA       None     None  108100.0  28.200          N      00  1.929947e+15         C  None
         """
         try:
             return pd.read_sql_query(
@@ -483,7 +496,8 @@ class Connection(object):
                 self.connection,
                 coerce_float=coerce_float,
                 parse_dates=date_cols,
-                index_col=index_col)
+                index_col=index_col,
+                params=params)
         except sa.exc.ProgrammingError as e:
             raise e
 
