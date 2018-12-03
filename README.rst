@@ -8,11 +8,20 @@ that is returned is read into a Pandas data frame.
 Installation
 ~~~~~~~~~~~~
 
+Using pip
+---------
+
+The easiest way to install WRDS-Py on any supported platform is to use `pip <https://pip.pypa.io/en/stable/quickstart/>`_, the Python package manager, to install from the Python package index (`pypi <https://pypi.org>`_).
+
+$ pip install wrds
+
 Mac OS/Linux
+------------
 
 $ python setup.py install
 
 Windows
+-------
 
 The WRDS-PY package requires Pandas and Psycopg2. Binaries of these can be found here:
 http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg
