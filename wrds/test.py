@@ -6,7 +6,7 @@ from copy import deepcopy
 try:
     import unittest.mock as mock
 except ImportError:
-    from mock import mock
+    import mock
 import sys
 
 class TestInitMethod(unittest.TestCase):
@@ -114,10 +114,10 @@ class TestConnectMethod(unittest.TestCase):
 
 
 class TestRawSqlMethod(unittest.TestCase):
-    """ Test the wrds.Connection.raw_sql method. 
+    """ Test the wrds.Connection.raw_sql method.
 
         wrds.Connection.raw_sql() should be able to take
-          'normal' and parameterized SQL, 
+          'normal' and parameterized SQL,
           and throw an error if not all parameters are supplied.
     """
     def setUp(self):
