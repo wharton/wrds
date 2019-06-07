@@ -25,7 +25,7 @@ WRDS-Py is a library for extracting data from WRDS data sources and getting it i
 """
 
 __title__ = 'wrds-py'
-__version__ = '3.0.7'
+__version__ = '3.0.8'
 __author__ = 'Wharton Research Data Services'
 __copyright__ = '2017-2019 Wharton Research Data Services'
 

@@ -129,6 +129,7 @@ class Connection(object):
             Close the connection to the database.
         """
         self.connection.close()
+        self.engine.dispose()
 
     def __enter__(self):
         self.connect()
