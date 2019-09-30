@@ -2,12 +2,12 @@
 
 import wrds
 import unittest
-from copy import deepcopy
 try:
     import unittest.mock as mock
 except ImportError:
     import mock
 import sys
+
 
 class TestInitMethod(unittest.TestCase):
     """ Test the wrds.Connection.__init__() method,
@@ -15,7 +15,7 @@ class TestInitMethod(unittest.TestCase):
     """
     @mock.patch('wrds.sql.sa')
     def test_init_calls_sqlalchemy_create_engine_defaults(self, mock_sa):
-        t = wrds.Connection()
+        wrds.Connection()
         connstring = 'postgresql://{host}:{port}/{dbname}'
         connstring = connstring.format(
             host=wrds.sql.WRDS_POSTGRES_HOST,
@@ -26,7 +26,6 @@ class TestInitMethod(unittest.TestCase):
             connect_args={'sslmode': 'require',
                           'application_name': wrds.sql.appname})
 
-
     @mock.patch('wrds.sql.sa')
     def test_init_calls_sqlalchemy_create_engine_custom(self, mock_sa):
         username = 'faketestusername'
@@ -36,7 +35,7 @@ class TestInitMethod(unittest.TestCase):
             host=wrds.sql.WRDS_POSTGRES_HOST,
             port=wrds.sql.WRDS_POSTGRES_PORT,
             dbname=wrds.sql.WRDS_POSTGRES_DB)
-        t = wrds.Connection(wrds_username=username)
+        wrds.Connection(wrds_username=username)
         mock_sa.create_engine.assert_called_with(
             connstring,
             connect_args={'sslmode': 'require',
@@ -45,24 +44,24 @@ class TestInitMethod(unittest.TestCase):
     @mock.patch('wrds.sql.Connection.load_library_list')
     @mock.patch('wrds.sql.Connection.connect')
     def test_init_default_connect(self, mock_connect, mock_lll):
-        t = wrds.Connection()
+        wrds.Connection()
         mock_connect.assert_called_once()
 
     @mock.patch('wrds.sql.Connection.connect')
     def test_init_autoconnect_false_no_connect(self, mock_connect):
-        t = wrds.Connection(autoconnect=False)
+        wrds.Connection(autoconnect=False)
         mock_connect.assert_not_called()
 
     @mock.patch('wrds.sql.Connection.connect')
     @mock.patch('wrds.sql.Connection.load_library_list')
     def test_init_default_load_library_list(self, mock_lll, mock_connect):
-        t = wrds.Connection()
+        wrds.Connection()
         mock_lll.assert_called_once()
 
     @mock.patch('wrds.sql.Connection.connect')
     @mock.patch('wrds.sql.Connection.load_library_list')
-    def test_init_autoconnect_false_no_connect(self, mock_lll, mock_connect):
-        t = wrds.Connection(autoconnect=False)
+    def test_init_autoconnect_false_no_connect_second_function(self, mock_lll, mock_connect):
+        wrds.Connection(autoconnect=False)
         mock_lll.assert_not_called()
 
 
@@ -73,6 +72,7 @@ class TestConnectMethod(unittest.TestCase):
         I'm just not smart enough to simulate bad passwords with
         the code as written.
     """
+
     def setUp(self):
         self.t = wrds.Connection(autoconnect=False)
         self.t._hostname = 'wrds.test.private'
@@ -120,6 +120,7 @@ class TestRawSqlMethod(unittest.TestCase):
           'normal' and parameterized SQL,
           and throw an error if not all parameters are supplied.
     """
+
     def setUp(self):
         self.t = wrds.Connection(autoconnect=False)
         self.t._hostname = 'wrds.test.private'
@@ -137,7 +138,14 @@ class TestRawSqlMethod(unittest.TestCase):
     def test_rawsql_takes_unparameterized_sql(self, mock_pd, mock_sa):
         sql = "SELECT * FROM information_schema.tables LIMIT 1"
         self.t.raw_sql(sql)
-        mock_pd.read_sql_query.assert_called_once_with(sql, self.t.connection, coerce_float=True, index_col=None, parse_dates=None, params=None)
+        mock_pd.read_sql_query.assert_called_once_with(
+            sql,
+            self.t.connection,
+            coerce_float=True,
+            index_col=None,
+            parse_dates=None,
+            params=None,
+        )
 
     @mock.patch('wrds.sql.sa')
     @mock.patch('wrds.sql.pd')
@@ -146,7 +154,14 @@ class TestRawSqlMethod(unittest.TestCase):
         tablename = "pg_stat_activity"
         self.t.engine = mock.Mock()
         self.t.raw_sql(sql, params=tablename)
-        mock_pd.read_sql_query.assert_called_once_with(sql, self.t.connection, coerce_float=True, index_col=None, parse_dates=None, params=tablename)
+        mock_pd.read_sql_query.assert_called_once_with(
+            sql,
+            self.t.connection,
+            coerce_float=True,
+            index_col=None,
+            parse_dates=None,
+            params=tablename,
+        )
 
 
 class TestCreatePgpassFile(unittest.TestCase):
