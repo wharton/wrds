@@ -31,6 +31,7 @@ WRDS_CONNECT_ARGS = {'sslmode': 'require',
                      'application_name': appname
                      }
 
+
 class NotSubscribedError(PermissionError):
     pass
 
@@ -343,9 +344,9 @@ class Connection(object):
             ['wciklink_gvkey', 'dforms', 'wciklink_cusip', 'wrds_forms', ...]
         """
         if self.__check_schema_perms(library):
-            output = (self.insp.get_view_names(schema=library)
-                      + self.insp.get_table_names(schema=library)
-                      + self.insp.get_foreign_table_names(schema=library))
+            output = (self.insp.get_view_names(schema=library) +
+                      self.insp.get_table_names(schema=library) +
+                      self.insp.get_foreign_table_names(schema=library))
             return output
 
     def __get_schema_for_view(self, schema, table):
