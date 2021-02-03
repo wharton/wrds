@@ -83,6 +83,7 @@ class Connection(object):
                     host=self._hostname,
                     port=self._port,
                     dbname=self._dbname),
+                isolation_level="AUTOCOMMIT",
                 connect_args=self._connect_args)
         # No username passed in, but other parameters might have been.
         else:
@@ -92,6 +93,7 @@ class Connection(object):
                     host=self._hostname,
                     port=self._port,
                     dbname=self._dbname),
+                isolation_level="AUTOCOMMIT",
                 connect_args=self._connect_args)
         if (autoconnect):
             self.connect()
@@ -112,6 +114,7 @@ class Connection(object):
                     host=self._hostname,
                     port=self._port,
                     dbname=self._dbname),
+                isolation_level="AUTOCOMMIT",
                 connect_args=self._connect_args)
             print("WRDS recommends setting up a .pgpass file.")
             print("You can find more info here:")
