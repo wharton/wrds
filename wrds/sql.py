@@ -423,7 +423,10 @@ class Connection(object):
             schema = library
             print("The row count will return 0 due to the structure of TAQ")
         else:
-            schema = self.__get_schema_for_view(library, table)
+            if table in self.insp.get_view_names(schema=library):
+                schema = self.__get_schema_for_view(library, table)
+            elif table in self.insp.get_table_names(schema=library):
+                schema = library
         if schema:
             sqlstmt = """
                 SELECT reltuples
