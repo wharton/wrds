@@ -173,7 +173,10 @@ class Connection(object):
 
         >>> user,passwd = wrds.Connection.__get_user_credentials()
         """
-        uname = getpass.getuser()
+        if (self._username):
+            uname = self._username
+        else:
+            uname = getpass.getuser()
         username = input("Enter your WRDS username [{}]:".format(uname))
         if not username:
             username = uname
