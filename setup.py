@@ -15,6 +15,7 @@ packages = [
 ]
 
 requires = [
+    'numpy',
     'pandas',
     'sqlalchemy',
     'psycopg2-binary',

@@ -24,7 +24,8 @@ class TestInitMethod(unittest.TestCase):
         mock_sa.create_engine.assert_called_with(
             connstring,
             connect_args={'sslmode': 'require',
-                          'application_name': wrds.sql.appname})
+                          'application_name': wrds.sql.appname},
+            isolation_level='AUTOCOMMIT')
 
     @mock.patch('wrds.sql.sa')
     def test_init_calls_sqlalchemy_create_engine_custom(self, mock_sa):
@@ -39,7 +40,8 @@ class TestInitMethod(unittest.TestCase):
         mock_sa.create_engine.assert_called_with(
             connstring,
             connect_args={'sslmode': 'require',
-                          'application_name': wrds.sql.appname})
+                          'application_name': wrds.sql.appname},
+            isolation_level='AUTOCOMMIT')
 
     @mock.patch('wrds.sql.Connection.load_library_list')
     @mock.patch('wrds.sql.Connection.connect')
@@ -110,7 +112,8 @@ class TestConnectMethod(unittest.TestCase):
         mock_sa.create_engine.assert_called_with(
             connstring,
             connect_args={'sslmode': 'require',
-                          'application_name': wrds.sql.appname})
+                          'application_name': wrds.sql.appname},
+        isolation_level='AUTOCOMMIT')
 
 
 class TestRawSqlMethod(unittest.TestCase):
