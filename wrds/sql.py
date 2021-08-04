@@ -270,7 +270,7 @@ class Connection(object):
 
         Works on both *nix and Win32.
         """
-        pgpass = "{host}:{port}:{dbname}:{user}:{passwd}"
+        pgpass = "{host}:{port}:{dbname}:{user}:{passwd}\n"
         passwd = self._password
         passwd = passwd.replace(':', '\:')
         # Avoid clobbering the file if it exists
@@ -290,7 +290,8 @@ class Connection(object):
                 # Surely we won't have any colons in these fields :^)
                 if (fields[0] == self._hostname and
                         int(fields[1]) == self._port and
-                        fields[2] == self._dbname):
+                        fields[2] == self._dbname and
+                        fields[3] == self._username):
                     newline = pgpass.format(
                         host=self._hostname,
                         port=self._port,
@@ -312,7 +313,6 @@ class Connection(object):
         # I lied, we're totally clobbering it:
         with open(pgfile, 'w') as fd:
             fd.writelines(lines)
-            fd.write('\n')
 
     def __check_schema_perms(self, schema):
         """
