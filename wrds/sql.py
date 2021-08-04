@@ -301,6 +301,17 @@ class Connection(object):
                     newlines.append(newline)
                 else:
                     newlines.append(line)
+
+            # Add line for current user/password - enables multiple wrds-pgdata entries with
+            # different usernames
+            newline = pgpass.format(
+                host=self._hostname,
+                port=self._port,
+                dbname=self._dbname,
+                user=self._username,
+                passwd=passwd)
+            if newline not in newlines:
+                newlines.append(newline)
             lines = newlines
         else:
             line = pgpass.format(
