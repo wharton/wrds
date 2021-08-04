@@ -116,10 +116,6 @@ class Connection(object):
                     dbname=self._dbname),
                 isolation_level="AUTOCOMMIT",
                 connect_args=self._connect_args)
-            print("WRDS recommends setting up a .pgpass file.")
-            print("You can find more info here:")
-            print("https://www.postgresql.org"
-                  "/docs/9.5/static/libpq-pgpass.html.")
             try:
                 self.connection = self.engine.connect()
             except Exception as e:
@@ -127,6 +123,22 @@ class Connection(object):
                 self._username = None
                 self._password = None
                 raise e
+
+            # Connection successful. Offer to create a .pgpass for the user.
+            print("WRDS recommends setting up a .pgpass file.")
+            do_create_pgpass = ""
+            while do_create_pgpass != "y" and do_create_pgpass != "n":
+                do_create_pgpass = input("Create .pgpass file now [y/n]?: ")
+
+            if do_create_pgpass == "y":
+                try:
+                    self.create_pgpass_file()
+                    print("Created .pgpass file successfully.")
+                except:
+                    print("Failed to create .pgpass file. Please try manually with the create_pgpass_file() function.")
+            else:
+                print("You can create this file yourself at any time")
+                print("with the create_pgpass_file() function.")
 
     def close(self):
         """
