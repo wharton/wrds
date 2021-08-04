@@ -173,7 +173,7 @@ class Connection(object):
         cursor = self.connection.execute(query)
         self.schema_perm = [x[0] for x in cursor.fetchall()
                             if not (x[0].endswith('_old') or
-                                    x[0].endswith('_all'))]
+                                    x[0].endswith('_new'))]
         print("Done")
 
     def __get_user_credentials(self):
