@@ -476,7 +476,8 @@ class Connection(object):
             print("There was a problem with retrieving the schema")
             return None
 
-    def raw_sql(self, sql, coerce_float=True, date_cols=None, index_col=None, params=None):
+    def raw_sql(self, sql, coerce_float=True, date_cols=None, index_col=None, params=None,
+        chunksize=500000, return_iter=False):
         """
             Queries the database using a raw SQL string.
 
@@ -498,8 +499,16 @@ class Connection(object):
               default: None
                 Column(s) to set as index(MultiIndex)
             :param params: parameters to SQL query, if parameterized.
+            :param chunksize: (optional) integer or None default: 500000
+                Process query in chunks of this size. Smaller chunksizes can save
+                a considerable amount of memory while query is being processed.
+                Set to None run query w/o chunking.
+            :param return_iter: (optional) boolean, default:False
+                When chunksize is not None, return an iterator where chunksize
+                number of rows is included in each chunk.
 
-            :rtype: pandas.DataFrame
+            :rtype: pandas.DataFrame or or Iterator[pandas.DataFrame]
+
 
             Usage ::
             # Basic Usage
@@ -524,14 +533,24 @@ class Connection(object):
                 2003-09-10  16:10:35.522000  T        A       None        B   71900.0  24.918          N      00  1.929970e+15         C  None
                 2003-09-10  09:35:20.709000  N       AA       None     None  108100.0  28.200          N      00  1.929947e+15         C  None
         """
+
         try:
-            return pd.read_sql_query(
+
+            df = pd.read_sql_query(
                 sql,
                 self.connection,
                 coerce_float=coerce_float,
                 parse_dates=date_cols,
                 index_col=index_col,
+                chunksize=chunksize,
                 params=params)
+            if return_iter or chunksize is None:
+                return df
+            else:
+                full_df = pd.DataFrame()
+                for chunk in df:
+                    full_df = pd.concat([full_df, chunk])
+                return full_df
         except sa.exc.ProgrammingError as e:
             raise e
 
