@@ -5,6 +5,7 @@ import sys
 import stat
 import pandas as pd
 import sqlalchemy as sa
+import urllib.parse
 from wrds import __version__ as wrds_version
 
 from sys import version_info
@@ -110,7 +111,7 @@ class Connection(object):
             self.engine = sa.create_engine(
                 pghost.format(
                     usr=self._username,
-                    pwd=self._password,
+                    pwd=urllib.parse.quote_plus(self._password),
                     host=self._hostname,
                     port=self._port,
                     dbname=self._dbname),
