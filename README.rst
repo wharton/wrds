@@ -8,6 +8,8 @@ that is returned is read into a Pandas data frame.
 Installation
 ~~~~~~~~~~~~
 
+For detailed information on installation of the module, please see `PYTHON: From Your Computer (Jupyter/Spyder) <https://wrds-www.wharton.upenn.edu/pages/support/programming-wrds/programming-python/python-from-your-computer/>`_
+
 Using pip
 ---------
 
@@ -23,10 +25,10 @@ http://www.lfd.uci.edu/~gohlke/pythonlibs/#psycopg
 
 Once the two required packages are installed, use ``pip`` to install.
 
-For more information please consult the WRDS Support section at https://wrds-web.wharton.upenn.edu/wrds/support/.
-
 Usage
 ~~~~~
+
+For detailed information on use of the module, please see `Querying WRDS Data using Python <https://wrds-www.wharton.upenn.edu/pages/support/programming-wrds/programming-python/querying-wrds-data-python/>`_
 
 >>> import wrds
 >>> db = wrds.Connection()
