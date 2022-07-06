@@ -160,20 +160,33 @@ class Connection(object):
         self.insp = sa.inspect(self.connection)
         print("Loading library list...")
         query = """
-        WITH RECURSIVE "names"("name") AS (
-            SELECT n.nspname AS "name"
-                FROM pg_catalog.pg_namespace n
-                WHERE n.nspname !~ '^pg_'
-                    AND n.nspname <> 'information_schema')
-            SELECT "name"
-                FROM "names"
-                WHERE pg_catalog.has_schema_privilege(
-                    current_user, "name", 'USAGE') = TRUE;
+-- list of schemas w/ tables that user has access to w/ product info
+WITH tables AS (
+    SELECT schemaname
+    FROM pg_tables
+    WHERE schemaname !~ '(^pg_)|(_old$)|(_new$)' AND schemaname <> 'information_schema' 
+        AND has_schema_privilege(current_user, "schemaname", 'USAGE') = TRUE
+    GROUP BY schemaname 
+)
+SELECT schemaname
+FROM tables
+UNION
+-- schemas w/ views (aka "friendly names") that reference accessable product tables
+SELECT distinct(dependent_ns.nspname) AS schemaname
+FROM pg_depend
+JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
+JOIN pg_class as dependent_view ON pg_rewrite.ev_class = dependent_view.oid
+JOIN pg_class as source_table ON pg_depend.refobjid = source_table.oid
+JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid
+    AND pg_depend.refobjsubid = pg_attribute.attnum
+JOIN pg_namespace dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
+JOIN pg_namespace source_ns ON source_ns.oid = source_table.relnamespace
+WHERE source_ns.nspname IN (SELECT schemaname FROM tables)
+GROUP BY schemaname
+ORDER BY 1 ;
         """
         cursor = self.connection.execute(query)
-        self.schema_perm = [x[0] for x in cursor.fetchall()
-                            if not (x[0].endswith('_old') or
-                                    x[0].endswith('_new'))]
+        self.schema_perm = [x[0] for x in cursor.fetchall()]
         print("Done")
 
     def __get_user_credentials(self):
