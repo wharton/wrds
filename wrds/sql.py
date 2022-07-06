@@ -355,7 +355,7 @@ ORDER BY 1 ;
         else:
             if schema in self.insp.get_schema_names():
                 raise NotSubscribedError(
-                    "You do not have permission to access"
+                    "You do not have permission to access "
                     "the {} library".format(schema))
             else:
                 raise SchemaNotFoundError(
@@ -446,8 +446,7 @@ ORDER BY 1 ;
 
     def get_row_count(self, library, table):
         """
-            Uses the library and table to get the approximate
-              row count for the table.
+            Uses the library and table to get the approximate row count for the table.
 
             :param library: Postgres schema name.
             :param table: Postgres table name.
@@ -458,36 +457,19 @@ ORDER BY 1 ;
             >>> db.get_row_count('wrdssec', 'dforms')
             16378400
         """
-        if 'taq' in library:
-            schema = library
-            print("The row count will return 0 due to the structure of TAQ")
-        else:
-            if table in self.insp.get_view_names(schema=library):
-                schema = self.__get_schema_for_view(library, table)
-            elif table in self.insp.get_table_names(schema=library):
-                schema = library
-        if schema:
-            sqlstmt = """
-                SELECT reltuples
-                  FROM pg_class r
-                  JOIN pg_namespace n
-                    ON (r.relnamespace = n.oid)
-                  WHERE r.relkind in ('r', 'f')
-                    AND n.nspname = '{}'
-                    AND r.relname = '{}';
-                """.format(schema, table)
 
-            try:
-                result = self.connection.execute(sqlstmt)
-                return int(result.fetchone()[0])
-            except Exception as e:
-                print(
-                    "There was a problem with retrieving"
-                    "the row count: {}".format(e))
-                return 0
-        else:
-            print("There was a problem with retrieving the schema")
-            return None
+        sqlstmt = """
+            EXPLAIN (FORMAT 'json')  SELECT 1 FROM {}.{} ;
+        """.format(sa.sql.quoted_name(library, True), sa.sql.quoted_name(table, True))
+
+        try:
+            result = self.connection.execute(sqlstmt)
+            return int(result.fetchone()[0][0]["Plan"]["Plan Rows"])
+        except Exception as e:
+            print(
+                "There was a problem with retrieving the row count: {}".format(e))
+            return 0
+
 
     def raw_sql(self, sql, coerce_float=True, date_cols=None, index_col=None, params=None,
         chunksize=500000, return_iter=False):
