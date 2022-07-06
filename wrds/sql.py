@@ -421,7 +421,7 @@ ORDER BY 1 ;
         """
             Takes the library and the table and describes all the columns
               in that table.
-            Includes Column Name, Column Type, Nullable?.
+            Includes Column Name, Column Type, Nullable?, Comment
 
             :param library: Postgres schema name.
             :param table: Postgres table name.
@@ -430,7 +430,7 @@ ORDER BY 1 ;
 
             Usage::
             >>> db.describe_table('wrdssec_all', 'dforms')
-                        name nullable     type
+                        name nullable     type comment
                   0      cik     True  VARCHAR
                   1    fdate     True     DATE
                   2  secdate     True     DATE
@@ -442,7 +442,7 @@ ORDER BY 1 ;
         print("Approximately {} rows in {}.{}.".format(rows, library, table))
         table_info = pd.DataFrame.from_dict(
             self.insp.get_columns(table, schema=library))
-        return table_info[['name', 'nullable', 'type']]
+        return table_info[['name', 'nullable', 'type', 'comment']]
 
     def get_row_count(self, library, table):
         """
