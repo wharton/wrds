@@ -160,30 +160,38 @@ class Connection(object):
         self.insp = sa.inspect(self.connection)
         print("Loading library list...")
         query = """
--- list of schemas w/ tables that user has access to w/ product info
-WITH tables AS (
-    SELECT schemaname
-    FROM pg_tables
-    WHERE schemaname !~ '(^pg_)|(_old$)|(_new$)' AND schemaname <> 'information_schema' 
-        AND has_schema_privilege(current_user, "schemaname", 'USAGE') = TRUE
-    GROUP BY schemaname 
+WITH pgobjs AS (
+    -- objects we care about - tables, views, foreign tables, partitioned tables
+    SELECT oid, relnamespace, relkind
+    FROM pg_class
+    WHERE relkind = ANY (ARRAY['r'::"char", 'v'::"char", 'f'::"char", 'p'::"char"])
+),
+schemas AS (
+    -- schemas we have usage on that represent products
+    SELECT nspname AS schemaname, pg_namespace.oid, array_agg(DISTINCT relkind) AS relkind_a
+    FROM pg_namespace
+    JOIN pgobjs ON pg_namespace.oid = relnamespace
+    WHERE nspname !~ '(^pg_)|(_old$)|(_new$)|(information_schema)'
+        AND has_schema_privilege(nspname, 'USAGE') = TRUE
+    GROUP BY nspname, pg_namespace.oid
 )
 SELECT schemaname
-FROM tables
+FROM schemas
+WHERE relkind_a != ARRAY['v'::"char"] -- any schema except only views
 UNION
 -- schemas w/ views (aka "friendly names") that reference accessable product tables
-SELECT distinct(dependent_ns.nspname) AS schemaname
-FROM pg_depend
-JOIN pg_rewrite ON pg_depend.objid = pg_rewrite.oid
-JOIN pg_class as dependent_view ON pg_rewrite.ev_class = dependent_view.oid
-JOIN pg_class as source_table ON pg_depend.refobjid = source_table.oid
-JOIN pg_attribute ON pg_depend.refobjid = pg_attribute.attrelid
-    AND pg_depend.refobjsubid = pg_attribute.attnum
-JOIN pg_namespace dependent_ns ON dependent_ns.oid = dependent_view.relnamespace
-JOIN pg_namespace source_ns ON source_ns.oid = source_table.relnamespace
-WHERE source_ns.nspname IN (SELECT schemaname FROM tables)
-GROUP BY schemaname
-ORDER BY 1 ;
+SELECT nv.schemaname
+FROM schemas nv
+JOIN pgobjs v ON nv.oid = v.relnamespace AND v.relkind = 'v'::"char"
+JOIN pg_depend dv ON v.oid = dv.refobjid AND dv.refclassid = 'pg_class'::regclass::oid
+    AND dv.classid = 'pg_rewrite'::regclass::oid AND dv.deptype = 'i'::"char"
+JOIN pg_depend dt ON dv.objid = dt.objid AND dv.refobjid <> dt.refobjid
+    AND dt.classid = 'pg_rewrite'::regclass::oid AND dt.refclassid = 'pg_class'::regclass::oid
+JOIN pgobjs t ON dt.refobjid = t.oid
+    AND (t.relkind = ANY (ARRAY['r'::"char", 'v'::"char", 'f'::"char", 'p'::"char"]))
+JOIN schemas nt ON t.relnamespace = nt.oid
+GROUP BY nv.schemaname
+ORDER BY 1;
         """
         cursor = self.connection.execute(query)
         self.schema_perm = [x[0] for x in cursor.fetchall()]
