@@ -2,16 +2,13 @@
 name = "wrds"
 version = "3.1.1"
 description = "Python access to WRDS Data"
-authors = [
-    "Eric Stein <ericst@wharton.upenn.edu>",
-    "Alex Malek <amalek@wharton.upenn.edu>"
+authors =  [
+    {name="Eric Stein", email="ericst@wharton.upenn.edu"},
+    {name="Alex Malek", email="amalek@wharton.upenn.edu"},
 ]
-license = "MIT"
+license = { file="LICENSE" }
 readme = "README.rst"
-python = "^3.6"
-homepage = "http://www.whartonwrds.com"
-repository = "https://github.com/wharton/wrds"
-documentation = "https://wrds-www.wharton.upenn.edu/pages/support/programming-wrds/programming-python/"
+requires-python = ">=3.6"
 
 keywords = ["wrds", "finance", "research", "crsp", "compustat"]
 
@@ -27,8 +24,13 @@ classifiers = [
         'Intended Audience :: Education',
         'Intended Audience :: Science/Research',
         'Topic :: Office/Business :: Financial',
-        'Topic :: Scientific/Engineering :: Information Analysis'
+        'Topic :: Scientific/Engineering :: Information Analysis',
         ]
+
+[project.urls]
+"Homepage" = "http://www.whartonwrds.com"
+"Repository" = "https://github.com/wharton/wrds"
+"Documentation" = "https://wrds-www.wharton.upenn.edu/pages/support/programming-wrds/programming-python/"
 
 [dependencies]
 mock = "~4.0"
