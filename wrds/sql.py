@@ -161,20 +161,41 @@ class Connection(object):
         self.insp = sa.inspect(self.connection)
         print("Loading library list...")
         query = """
-        WITH RECURSIVE "names"("name") AS (
-            SELECT n.nspname AS "name"
-                FROM pg_catalog.pg_namespace n
-                WHERE n.nspname !~ '^pg_'
-                    AND n.nspname <> 'information_schema')
-            SELECT "name"
-                FROM "names"
-                WHERE pg_catalog.has_schema_privilege(
-                    current_user, "name", 'USAGE') = TRUE;
+WITH pgobjs AS (
+    -- objects we care about - tables, views, foreign tables, partitioned tables
+    SELECT oid, relnamespace, relkind
+    FROM pg_class
+    WHERE relkind = ANY (ARRAY['r'::"char", 'v'::"char", 'f'::"char", 'p'::"char"])
+),
+schemas AS (
+    -- schemas we have usage on that represent products
+    SELECT nspname AS schemaname, pg_namespace.oid, array_agg(DISTINCT relkind) AS relkind_a
+    FROM pg_namespace
+    JOIN pgobjs ON pg_namespace.oid = relnamespace
+    WHERE nspname !~ '(^pg_)|(_old$)|(_new$)|(information_schema)'
+        AND has_schema_privilege(nspname, 'USAGE') = TRUE
+    GROUP BY nspname, pg_namespace.oid
+)
+SELECT schemaname
+FROM schemas
+WHERE relkind_a != ARRAY['v'::"char"] -- any schema except only views
+UNION
+-- schemas w/ views (aka "friendly names") that reference accessable product tables
+SELECT nv.schemaname
+FROM schemas nv
+JOIN pgobjs v ON nv.oid = v.relnamespace AND v.relkind = 'v'::"char"
+JOIN pg_depend dv ON v.oid = dv.refobjid AND dv.refclassid = 'pg_class'::regclass::oid
+    AND dv.classid = 'pg_rewrite'::regclass::oid AND dv.deptype = 'i'::"char"
+JOIN pg_depend dt ON dv.objid = dt.objid AND dv.refobjid <> dt.refobjid
+    AND dt.classid = 'pg_rewrite'::regclass::oid AND dt.refclassid = 'pg_class'::regclass::oid
+JOIN pgobjs t ON dt.refobjid = t.oid
+    AND (t.relkind = ANY (ARRAY['r'::"char", 'v'::"char", 'f'::"char", 'p'::"char"]))
+JOIN schemas nt ON t.relnamespace = nt.oid
+GROUP BY nv.schemaname
+ORDER BY 1;
         """
         cursor = self.connection.execute(query)
-        self.schema_perm = [x[0] for x in cursor.fetchall()
-                            if not (x[0].endswith('_old') or
-                                    x[0].endswith('_new'))]
+        self.schema_perm = [x[0] for x in cursor.fetchall()]
         print("Done")
 
     def __get_user_credentials(self):
@@ -343,7 +364,7 @@ class Connection(object):
         else:
             if schema in self.insp.get_schema_names():
                 raise NotSubscribedError(
-                    "You do not have permission to access"
+                    "You do not have permission to access "
                     "the {} library".format(schema))
             else:
                 raise SchemaNotFoundError(
@@ -409,7 +430,7 @@ class Connection(object):
         """
             Takes the library and the table and describes all the columns
               in that table.
-            Includes Column Name, Column Type, Nullable?.
+            Includes Column Name, Column Type, Nullable?, Comment
 
             :param library: Postgres schema name.
             :param table: Postgres table name.
@@ -418,7 +439,7 @@ class Connection(object):
 
             Usage::
             >>> db.describe_table('wrdssec_all', 'dforms')
-                        name nullable     type
+                        name nullable     type comment
                   0      cik     True  VARCHAR
                   1    fdate     True     DATE
                   2  secdate     True     DATE
@@ -430,12 +451,11 @@ class Connection(object):
         print("Approximately {} rows in {}.{}.".format(rows, library, table))
         table_info = pd.DataFrame.from_dict(
             self.insp.get_columns(table, schema=library))
-        return table_info[['name', 'nullable', 'type']]
+        return table_info[['name', 'nullable', 'type', 'comment']]
 
     def get_row_count(self, library, table):
         """
-            Uses the library and table to get the approximate
-              row count for the table.
+            Uses the library and table to get the approximate row count for the table.
 
             :param library: Postgres schema name.
             :param table: Postgres table name.
@@ -446,36 +466,19 @@ class Connection(object):
             >>> db.get_row_count('wrdssec', 'dforms')
             16378400
         """
-        if 'taq' in library:
-            schema = library
-            print("The row count will return 0 due to the structure of TAQ")
-        else:
-            if table in self.insp.get_view_names(schema=library):
-                schema = self.__get_schema_for_view(library, table)
-            elif table in self.insp.get_table_names(schema=library):
-                schema = library
-        if schema:
-            sqlstmt = """
-                SELECT reltuples
-                  FROM pg_class r
-                  JOIN pg_namespace n
-                    ON (r.relnamespace = n.oid)
-                  WHERE r.relkind in ('r', 'f')
-                    AND n.nspname = '{}'
-                    AND r.relname = '{}';
-                """.format(schema, table)
 
-            try:
-                result = self.connection.execute(sqlstmt)
-                return int(result.fetchone()[0])
-            except Exception as e:
-                print(
-                    "There was a problem with retrieving"
-                    "the row count: {}".format(e))
-                return 0
-        else:
-            print("There was a problem with retrieving the schema")
-            return None
+        sqlstmt = """
+            EXPLAIN (FORMAT 'json')  SELECT 1 FROM {}.{} ;
+        """.format(sa.sql.quoted_name(library, True), sa.sql.quoted_name(table, True))
+
+        try:
+            result = self.connection.execute(sqlstmt)
+            return int(result.fetchone()[0][0]["Plan"]["Plan Rows"])
+        except Exception as e:
+            print(
+                "There was a problem with retrieving the row count: {}".format(e))
+            return 0
+
 
     def raw_sql(self, sql, coerce_float=True, date_cols=None, index_col=None, params=None,
         chunksize=500000, return_iter=False):
