@@ -26,7 +26,7 @@ requires = [
 
 setup(
     name='wrds',
-    version='3.1.1',
+    version='3.1.2',
     description="Python access to WRDS Data",
     long_description=open('README.rst').read(),
     author='WRDS',
