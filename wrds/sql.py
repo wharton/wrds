@@ -6,7 +6,8 @@ import stat
 import pandas as pd
 import sqlalchemy as sa
 import urllib.parse
-from wrds import __version__ as wrds_version
+
+from .metadata import __version__ as wrds_version
 
 from sys import version_info
 py3 = version_info[0] > 2
