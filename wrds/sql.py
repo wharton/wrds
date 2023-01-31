@@ -194,6 +194,8 @@ JOIN schemas nt ON t.relnamespace = nt.oid
 GROUP BY nv.schemaname
 ORDER BY 1;
         """
+        if sa.__version__.startswith('2'):
+            query = sa.text(query)
         cursor = self.connection.execute(query)
         self.schema_perm = [x[0] for x in cursor.fetchall()]
         print("Done")
@@ -422,6 +424,8 @@ ORDER BY 1;
                       WHERE dependent_ns.nspname = '{schema}'
                         AND dependent_view.relname = '{view}';
                     """.format(schema=schema, view=table)
+        if sa.__version__.startswith('2'):
+            sql_code = sa.text(sql_code)
         if self.__check_schema_perms(schema):
             result = self.connection.execute(sql_code)
             return result.fetchone()[0]
@@ -470,7 +474,8 @@ ORDER BY 1;
         sqlstmt = """
             EXPLAIN (FORMAT 'json')  SELECT 1 FROM {}.{} ;
         """.format(sa.sql.quoted_name(library, True), sa.sql.quoted_name(table, True))
-
+        if sa.__version__.startswith('2'):
+            sqlstmt = sa.text(sqlstmt)
         try:
             result = self.connection.execute(sqlstmt)
             return int(result.fetchone()[0][0]["Plan"]["Plan Rows"])
