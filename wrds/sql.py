@@ -209,9 +209,10 @@ ORDER BY 1;
         """
         if (self._username):
             uname = self._username
+            username = uname
         else:
             uname = getpass.getuser()
-        username = input("Enter your WRDS username [{}]:".format(uname))
+            username = input("Enter your WRDS username [{}]:".format(uname))
         if not username:
             username = uname
         passwd = getpass.getpass('Enter your password:')
