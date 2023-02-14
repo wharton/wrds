@@ -17,7 +17,7 @@ packages = [
 requires = [
     'numpy',
     'pandas',
-    'sqlalchemy',
+    'sqlalchemy<2.0.0',
     'psycopg2-binary',
     # mock may need to be included if folks
     # want to run tests w/Py2
@@ -26,7 +26,7 @@ requires = [
 
 setup(
     name='wrds',
-    version='3.1.2',
+    version='3.1.3',
     description="Python access to WRDS Data",
     long_description=open('README.rst').read(),
     author='WRDS',
