@@ -4,9 +4,9 @@ name: Publish WRDS Python 🐍 distributions 📦 to PyPI and TestPyPI
 
 # Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
+  # Triggers the workflow on push or pull request events but only for the main branch
   release:
-    branches: [ master ]
+    branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -21,11 +21,11 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - uses: actions/checkout@master
-    - name: Set up Python 3.7
+    - uses: actions/checkout@main
+    - name: Set up Python 3.11
       uses: actions/setup-python@v1
       with:
-        python-version: 3.7
+        python-version: 3.11
     - name: Install pypa/build
       run: >-
         python -m
@@ -41,11 +41,11 @@ jobs:
         --outdir dist/
         
     - name: Publish distribution 📦 to Test PyPI
-      uses: pypa/gh-action-pypi-publish@master
+      uses: pypa/gh-action-pypi-publish@main
       with:
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
     - name: Publish distribution 📦 to PyPI
-      uses: pypa/gh-action-pypi-publish@master
+      uses: pypa/gh-action-pypi-publish@main
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
