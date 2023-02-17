@@ -3,6 +3,7 @@ requires = ["setuptools>=67", "setuptools_scm>=7", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
+write_to = "wrds/_version.py"
 
 [project]
 name = "wrds"

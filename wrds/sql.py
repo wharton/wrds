@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import getpass
 import os
 import sys
@@ -9,28 +8,17 @@ import urllib.parse
 from wrds import __version__ as wrds_version
 
 from sys import version_info
-py3 = version_info[0] > 2
 
-if not py3:
-    input = raw_input  # use raw_input in python 2
-    PermissionError = Exception
-    FileNotFoundError = Exception
-
-appname = '{0} python {1}.{2}.{3}/wrds {4}'.format(
-          sys.platform,
-          version_info[0],
-          version_info[1],
-          version_info[2],
-          wrds_version)
+appname = "{0} python {1}.{2}.{3}/wrds {4}".format(
+    sys.platform, version_info[0], version_info[1], version_info[2], wrds_version
+)
 
 
 # Sane defaults
-WRDS_POSTGRES_HOST = 'wrds-pgdata.wharton.upenn.edu'
+WRDS_POSTGRES_HOST = "wrds-pgdata.wharton.upenn.edu"
 WRDS_POSTGRES_PORT = 9737
-WRDS_POSTGRES_DB = 'wrds'
-WRDS_CONNECT_ARGS = {'sslmode': 'require',
-                     'application_name': appname
-                     }
+WRDS_POSTGRES_DB = "wrds"
+WRDS_CONNECT_ARGS = {"sslmode": "require", "application_name": appname}
 
 
 class NotSubscribedError(PermissionError):
@@ -69,54 +57,56 @@ class Connection(object):
         """
         self._password = ""
         # If user passed in any of these parameters, override defaults.
-        self._username = kwargs.get('wrds_username', None)
-        self._hostname = kwargs.get('wrds_hostname', WRDS_POSTGRES_HOST)
-        self._port = kwargs.get('wrds_port', WRDS_POSTGRES_PORT)
-        self._dbname = kwargs.get('wrds_dbname', WRDS_POSTGRES_DB)
-        self._connect_args = kwargs.get('wrds_connect_args', WRDS_CONNECT_ARGS)
+        self._username = kwargs.get("wrds_username", None)
+        self._hostname = kwargs.get("wrds_hostname", WRDS_POSTGRES_HOST)
+        self._port = kwargs.get("wrds_port", WRDS_POSTGRES_PORT)
+        self._dbname = kwargs.get("wrds_dbname", WRDS_POSTGRES_DB)
+        self._connect_args = kwargs.get("wrds_connect_args", WRDS_CONNECT_ARGS)
 
         # If username was passed in, the URI is different.
-        if (self._username):
-            pguri = 'postgresql://{usr}@{host}:{port}/{dbname}'
+        if self._username:
+            pguri = "postgresql://{usr}@{host}:{port}/{dbname}"
             self.engine = sa.create_engine(
                 pguri.format(
                     usr=self._username,
                     host=self._hostname,
                     port=self._port,
-                    dbname=self._dbname),
+                    dbname=self._dbname,
+                ),
                 isolation_level="AUTOCOMMIT",
-                connect_args=self._connect_args)
+                connect_args=self._connect_args,
+            )
         # No username passed in, but other parameters might have been.
         else:
-            pguri = 'postgresql://{host}:{port}/{dbname}'
+            pguri = "postgresql://{host}:{port}/{dbname}"
             self.engine = sa.create_engine(
-                pguri.format(
-                    host=self._hostname,
-                    port=self._port,
-                    dbname=self._dbname),
+                pguri.format(host=self._hostname, port=self._port, dbname=self._dbname),
                 isolation_level="AUTOCOMMIT",
-                connect_args=self._connect_args)
-        if (autoconnect):
+                connect_args=self._connect_args,
+            )
+        if autoconnect:
             self.connect()
             self.load_library_list()
 
     def connect(self):
-        """ Make a connection to the WRDS database. """
+        """Make a connection to the WRDS database."""
         try:
             self.connection = self.engine.connect()
-        except Exception as e:
+        except Exception:
             # These things should probably not be exported all over creation
             self._username, self._password = self.__get_user_credentials()
-            pghost = 'postgresql://{usr}:{pwd}@{host}:{port}/{dbname}'
+            pghost = "postgresql://{usr}:{pwd}@{host}:{port}/{dbname}"
             self.engine = sa.create_engine(
                 pghost.format(
                     usr=self._username,
                     pwd=urllib.parse.quote_plus(self._password),
                     host=self._hostname,
                     port=self._port,
-                    dbname=self._dbname),
+                    dbname=self._dbname,
+                ),
                 isolation_level="AUTOCOMMIT",
-                connect_args=self._connect_args)
+                connect_args=self._connect_args,
+            )
             try:
                 self.connection = self.engine.connect()
             except Exception as e:
@@ -136,14 +126,17 @@ class Connection(object):
                     self.create_pgpass_file()
                     print("Created .pgpass file successfully.")
                 except:
-                    print("Failed to create .pgpass file. Please try manually with the create_pgpass_file() function.")
+                    print(
+                        "Failed to create .pgpass file. Please try manually with the "
+                        "create_pgpass_file() function."
+                    )
             else:
                 print("You can create this file yourself at any time")
                 print("with the create_pgpass_file() function.")
 
     def close(self):
         """
-            Close the connection to the database.
+        Close the connection to the database.
         """
         self.connection.close()
         self.engine.dispose()
@@ -156,8 +149,8 @@ class Connection(object):
         self.close()
 
     def load_library_list(self):
-        """ Load the list of Postgres schemata (c.f. SAS LIBNAMEs)
-              the user has permission to access. """
+        """Load the list of Postgres schemata (c.f. SAS LIBNAMEs)
+        the user has permission to access."""
         self.insp = sa.inspect(self.connection)
         print("Loading library list...")
         query = """
@@ -169,7 +162,9 @@ WITH pgobjs AS (
 ),
 schemas AS (
     -- schemas we have usage on that represent products
-    SELECT nspname AS schemaname, pg_namespace.oid, array_agg(DISTINCT relkind) AS relkind_a
+    SELECT nspname AS schemaname,
+        pg_namespace.oid,
+        array_agg(DISTINCT relkind) AS relkind_a
     FROM pg_namespace
     JOIN pgobjs ON pg_namespace.oid = relnamespace
     WHERE nspname !~ '(^pg_)|(_old$)|(_new$)|(information_schema)'
@@ -187,7 +182,8 @@ JOIN pgobjs v ON nv.oid = v.relnamespace AND v.relkind = 'v'::"char"
 JOIN pg_depend dv ON v.oid = dv.refobjid AND dv.refclassid = 'pg_class'::regclass::oid
     AND dv.classid = 'pg_rewrite'::regclass::oid AND dv.deptype = 'i'::"char"
 JOIN pg_depend dt ON dv.objid = dt.objid AND dv.refobjid <> dt.refobjid
-    AND dt.classid = 'pg_rewrite'::regclass::oid AND dt.refclassid = 'pg_class'::regclass::oid
+    AND dt.classid = 'pg_rewrite'::regclass::oid
+    AND dt.refclassid = 'pg_class'::regclass::oid
 JOIN pgobjs t ON dt.refobjid = t.oid
     AND (t.relkind = ANY (ARRAY['r'::"char", 'v'::"char", 'f'::"char", 'p'::"char"]))
 JOIN schemas nt ON t.relnamespace = nt.oid
@@ -207,14 +203,14 @@ ORDER BY 1;
 
         >>> user,passwd = wrds.Connection.__get_user_credentials()
         """
-        if (self._username):
+        if self._username:
             uname = self._username
         else:
             uname = getpass.getuser()
         username = input("Enter your WRDS username [{}]:".format(uname))
         if not username:
             username = uname
-        passwd = getpass.getpass('Enter your password:')
+        passwd = getpass.getpass("Enter your password:")
         return username, passwd
 
     def create_pgpass_file(self):
@@ -236,9 +232,9 @@ ORDER BY 1;
         >>> db = wrds.Connection()
         >>> db.create_pgpass_file()
         """
-        if (not self._username or not self._password):
+        if not self._username or not self._password:
             self._username, self._password = self.__get_user_credentials()
-        if (sys.platform == 'win32'):
+        if sys.platform == "win32":
             self.__create_pgpass_file_win32()
         else:
             self.__create_pgpass_file_unix()
@@ -251,17 +247,16 @@ ORDER BY 1;
           as to require its own special way of doing things.
         Save the pgpass file in %APPDATA%\postgresql as 'pgpass.conf'.
         """
-        appdata = os.getenv('APPDATA')
-        pgdir = appdata + os.path.sep + 'postgresql'
+        appdata = os.getenv("APPDATA")
+        pgdir = appdata + os.path.sep + "postgresql"
         # Can we at least assume %APPDATA% always exists? I'm seriously asking.
-        if (not os.path.exists(pgdir)):
+        if not os.path.exists(pgdir):
             os.mkdir(pgdir)
         # Path exists, but is not a directory
-        elif (not os.path.isdir(pgdir)):
-            err = ("Cannot create directory {}: "
-                   "path exists but is not a directory")
+        elif not os.path.isdir(pgdir):
+            err = "Cannot create directory {}: " "path exists but is not a directory"
             raise FileExistsError(err.format(pgdir))
-        pgfile = pgdir + os.path.sep + 'pgpass.conf'
+        pgfile = pgdir + os.path.sep + "pgpass.conf"
         # Write the pgpass.conf file without clobbering
         self.__write_pgpass_file(pgfile)
 
@@ -273,9 +268,9 @@ ORDER BY 1;
         This function works on Mac OS X and Linux.
         It should work on Solaris too, but this is untested.
         """
-        homedir = os.getenv('HOME')
-        pgfile = homedir + os.path.sep + '.pgpass'
-        if (os.path.isfile(pgfile)):
+        homedir = os.getenv("HOME")
+        pgfile = homedir + os.path.sep + ".pgpass"
+        if os.path.isfile(pgfile):
             # Set it to mode 600 (rw-------) so we can write to it
             os.chmod(pgfile, stat.S_IRUSR | stat.S_IWUSR)
         self.__write_pgpass_file(pgfile)
@@ -294,10 +289,10 @@ ORDER BY 1;
         """
         pgpass = "{host}:{port}:{dbname}:{user}:{passwd}\n"
         passwd = self._password
-        passwd = passwd.replace(':', '\:')
+        passwd = passwd.replace(":", "\:")
         # Avoid clobbering the file if it exists
-        if (os.path.isfile(pgfile)):
-            with open(pgfile, 'r') as fd:
+        if os.path.isfile(pgfile):
+            with open(pgfile, "r") as fd:
                 lines = fd.readlines()
             newlines = []
             for line in lines:
@@ -305,33 +300,37 @@ ORDER BY 1;
                 #  split() from splitting on them.
                 # Saving to a new variable here absolves us
                 #  of having to re-replace the substituted ##COLON## later.
-                oldline = line.replace("""\:""", '##COLON##')
-                fields = oldline.split(':')
+                oldline = line.replace("""\:""", "##COLON##")
+                fields = oldline.split(":")
                 # On finding a line matching the hostname, port and dbname
                 #  we replace it with the new pgpass line.
                 # Surely we won't have any colons in these fields :^)
-                if (fields[0] == self._hostname and
-                        int(fields[1]) == self._port and
-                        fields[2] == self._dbname and
-                        fields[3] == self._username):
+                if (
+                    fields[0] == self._hostname
+                    and int(fields[1]) == self._port
+                    and fields[2] == self._dbname
+                    and fields[3] == self._username
+                ):
                     newline = pgpass.format(
                         host=self._hostname,
                         port=self._port,
                         dbname=self._dbname,
                         user=self._username,
-                        passwd=passwd)
+                        passwd=passwd,
+                    )
                     newlines.append(newline)
                 else:
                     newlines.append(line)
 
-            # Add line for current user/password - enables multiple wrds-pgdata entries with
-            # different usernames
+            # Add line for current user/password - enables multiple wrds-pgdata entries
+            # with different usernames
             newline = pgpass.format(
                 host=self._hostname,
                 port=self._port,
                 dbname=self._dbname,
                 user=self._username,
-                passwd=passwd)
+                passwd=passwd,
+            )
             if newline not in newlines:
                 newlines.append(newline)
             lines = newlines
@@ -341,22 +340,23 @@ ORDER BY 1;
                 port=self._port,
                 dbname=self._dbname,
                 user=self._username,
-                passwd=passwd)
+                passwd=passwd,
+            )
             lines = [line]
         # I lied, we're totally clobbering it:
-        with open(pgfile, 'w') as fd:
+        with open(pgfile, "w") as fd:
             fd.writelines(lines)
 
     def __check_schema_perms(self, schema):
         """
-            Check the permissions of the schema.
-            Raise permissions error if user does not have access.
-            Raise other error if the schema does not exist.
+        Check the permissions of the schema.
+        Raise permissions error if user does not have access.
+        Raise other error if the schema does not exist.
 
-            Else, return True
+        Else, return True
 
-            :param schema: Postgres schema name.
-            :rtype: bool
+        :param schema: Postgres schema name.
+        :rtype: bool
 
         """
         if schema in self.schema_perm:
@@ -365,39 +365,41 @@ ORDER BY 1;
             if schema in self.insp.get_schema_names():
                 raise NotSubscribedError(
                     "You do not have permission to access "
-                    "the {} library".format(schema))
+                    "the {} library".format(schema)
+                )
             else:
-                raise SchemaNotFoundError(
-                    "The {} library is not found.".format(schema))
+                raise SchemaNotFoundError("The {} library is not found.".format(schema))
 
     def list_libraries(self):
         """
-            Return all the libraries (schemas) the user can access.
+        Return all the libraries (schemas) the user can access.
 
-            :rtype: list
+        :rtype: list
 
-            Usage::
-            >>> db.list_libraries()
-            ['aha', 'audit', 'block', 'boardex', ...]
+        Usage::
+        >>> db.list_libraries()
+        ['aha', 'audit', 'block', 'boardex', ...]
         """
         return self.schema_perm
 
     def list_tables(self, library):
         """
-            Returns a list of all the views/tables/foreign tables within a schema.
+        Returns a list of all the views/tables/foreign tables within a schema.
 
-            :param library: Postgres schema name.
+        :param library: Postgres schema name.
 
-            :rtype: list
+        :rtype: list
 
-            Usage::
-            >>> db.list_tables('wrdssec')
-            ['wciklink_gvkey', 'dforms', 'wciklink_cusip', 'wrds_forms', ...]
+        Usage::
+        >>> db.list_tables('wrdssec')
+        ['wciklink_gvkey', 'dforms', 'wciklink_cusip', 'wrds_forms', ...]
         """
         if self.__check_schema_perms(library):
-            output = (self.insp.get_view_names(schema=library) +
-                      self.insp.get_table_names(schema=library) +
-                      self.insp.get_foreign_table_names(schema=library))
+            output = (
+                self.insp.get_view_names(schema=library)
+                + self.insp.get_table_names(schema=library)
+                + self.insp.get_foreign_table_names(schema=library)
+            )
             return output
 
     def __get_schema_for_view(self, schema, table):
@@ -421,125 +423,135 @@ ORDER BY 1;
                         ON source_ns.oid = source_table.relnamespace
                       WHERE dependent_ns.nspname = '{schema}'
                         AND dependent_view.relname = '{view}';
-                    """.format(schema=schema, view=table)
+                    """.format(
+            schema=schema, view=table
+        )
         if self.__check_schema_perms(schema):
             result = self.connection.execute(sql_code)
             return result.fetchone()[0]
 
     def describe_table(self, library, table):
         """
-            Takes the library and the table and describes all the columns
-              in that table.
-            Includes Column Name, Column Type, Nullable?, Comment
+        Takes the library and the table and describes all the columns
+          in that table.
+        Includes Column Name, Column Type, Nullable?, Comment
 
-            :param library: Postgres schema name.
-            :param table: Postgres table name.
+        :param library: Postgres schema name.
+        :param table: Postgres table name.
 
-            :rtype: pandas.DataFrame
+        :rtype: pandas.DataFrame
 
-            Usage::
-            >>> db.describe_table('wrdssec_all', 'dforms')
-                        name nullable     type comment
-                  0      cik     True  VARCHAR
-                  1    fdate     True     DATE
-                  2  secdate     True     DATE
-                  3     form     True  VARCHAR
-                  4   coname     True  VARCHAR
-                  5    fname     True  VARCHAR
+        Usage::
+        >>> db.describe_table('wrdssec_all', 'dforms')
+                    name nullable     type comment
+              0      cik     True  VARCHAR
+              1    fdate     True     DATE
+              2  secdate     True     DATE
+              3     form     True  VARCHAR
+              4   coname     True  VARCHAR
+              5    fname     True  VARCHAR
         """
         rows = self.get_row_count(library, table)
         print("Approximately {} rows in {}.{}.".format(rows, library, table))
         table_info = pd.DataFrame.from_dict(
-            self.insp.get_columns(table, schema=library))
-        return table_info[['name', 'nullable', 'type', 'comment']]
+            self.insp.get_columns(table, schema=library)
+        )
+        return table_info[["name", "nullable", "type", "comment"]]
 
     def get_row_count(self, library, table):
         """
-            Uses the library and table to get the approximate row count for the table.
+        Uses the library and table to get the approximate row count for the table.
 
-            :param library: Postgres schema name.
-            :param table: Postgres table name.
+        :param library: Postgres schema name.
+        :param table: Postgres table name.
 
-            :rtype: int
+        :rtype: int
 
-            Usage::
-            >>> db.get_row_count('wrdssec', 'dforms')
-            16378400
+        Usage::
+        >>> db.get_row_count('wrdssec', 'dforms')
+        16378400
         """
 
         sqlstmt = """
             EXPLAIN (FORMAT 'json')  SELECT 1 FROM {}.{} ;
-        """.format(sa.sql.quoted_name(library, True), sa.sql.quoted_name(table, True))
+        """.format(
+            sa.sql.quoted_name(library, True), sa.sql.quoted_name(table, True)
+        )
 
         try:
             result = self.connection.execute(sqlstmt)
             return int(result.fetchone()[0][0]["Plan"]["Plan Rows"])
         except Exception as e:
-            print(
-                "There was a problem with retrieving the row count: {}".format(e))
+            print("There was a problem with retrieving the row count: {}".format(e))
             return 0
 
-
-    def raw_sql(self, sql, coerce_float=True, date_cols=None, index_col=None, params=None,
-        chunksize=500000, return_iter=False):
+    def raw_sql(
+        self,
+        sql,
+        coerce_float=True,
+        date_cols=None,
+        index_col=None,
+        params=None,
+        chunksize=500000,
+        return_iter=False,
+    ):
         """
-            Queries the database using a raw SQL string.
+        Queries the database using a raw SQL string.
 
-            :param sql: SQL code in string object.
-            :param coerce_float: (optional) boolean, default: True
-                Attempt to convert values to non-string, non-numeric objects
-                to floating point. Can result in loss of precision.
-            :param date_cols: (optional) list or dict, default: None
-                - List of column names to parse as date
-                - Dict of ``{column_name: format string}`` where
-                    format string is:
-                      strftime compatible in case of parsing string times or
-                      is one of (D, s, ns, ms, us) in case of parsing
-                        integer timestamps
-                - Dict of ``{column_name: arg dict}``,
-                    where the arg dict corresponds to the keyword arguments of
-                      :func:`pandas.to_datetime`
-            :param index_col: (optional) string or list of strings,
-              default: None
-                Column(s) to set as index(MultiIndex)
-            :param params: parameters to SQL query, if parameterized.
-            :param chunksize: (optional) integer or None default: 500000
-                Process query in chunks of this size. Smaller chunksizes can save
-                a considerable amount of memory while query is being processed.
-                Set to None run query w/o chunking.
-            :param return_iter: (optional) boolean, default:False
-                When chunksize is not None, return an iterator where chunksize
-                number of rows is included in each chunk.
+        :param sql: SQL code in string object.
+        :param coerce_float: (optional) boolean, default: True
+            Attempt to convert values to non-string, non-numeric objects
+            to floating point. Can result in loss of precision.
+        :param date_cols: (optional) list or dict, default: None
+            - List of column names to parse as date
+            - Dict of ``{column_name: format string}`` where
+                format string is:
+                  strftime compatible in case of parsing string times or
+                  is one of (D, s, ns, ms, us) in case of parsing
+                    integer timestamps
+            - Dict of ``{column_name: arg dict}``,
+                where the arg dict corresponds to the keyword arguments of
+                  :func:`pandas.to_datetime`
+        :param index_col: (optional) string or list of strings,
+          default: None
+            Column(s) to set as index(MultiIndex)
+        :param params: parameters to SQL query, if parameterized.
+        :param chunksize: (optional) integer or None default: 500000
+            Process query in chunks of this size. Smaller chunksizes can save
+            a considerable amount of memory while query is being processed.
+            Set to None run query w/o chunking.
+        :param return_iter: (optional) boolean, default:False
+            When chunksize is not None, return an iterator where chunksize
+            number of rows is included in each chunk.
 
-            :rtype: pandas.DataFrame or or Iterator[pandas.DataFrame]
+        :rtype: pandas.DataFrame or or Iterator[pandas.DataFrame]
 
 
-            Usage ::
-            # Basic Usage
-            >>> data = db.raw_sql('select cik, fdate, coname from wrdssec_all.dforms;', date_cols=['fdate'], index_col='cik')
-            >>> data.head()
-                cik        fdate       coname
-                0000000003 1995-02-15  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
-                0000000003 1996-02-14  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
-                0000000003 1997-02-19  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
-                0000000003 1998-03-02  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
-                0000000003 1998-03-10  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y..
-                ...
+        Usage ::
+        # Basic Usage
+        >>> data = db.raw_sql('select cik, fdate, coname from wrdssec_all.dforms;', date_cols=['fdate'], index_col='cik')
+        >>> data.head()
+            cik        fdate       coname
+            0000000003 1995-02-15  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
+            0000000003 1996-02-14  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
+            0000000003 1997-02-19  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
+            0000000003 1998-03-02  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
+            0000000003 1998-03-10  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y..
+            ...
 
-            # Parameterized SQL query
-            >>> parm = {'syms': ('A', 'AA', 'AAPL'), 'num_shares': 50000}
-            >>> data = db.raw_sql('select * from taqmsec.ctm_20030910 where sym_root in %(syms)s and size > %(num_shares)s', params=parm)
-            >>> data.head()
-                      date           time_m ex sym_root sym_suffix tr_scond      size   price tr_stopind tr_corr     tr_seqnum tr_source tr_rf
-                2003-09-10  11:02:09.485000  T        A       None     None  211400.0  25.350          N      00  1.929952e+15         C  None
-                2003-09-10  11:04:29.508000  N        A       None     None   55500.0  25.180          N      00  1.929952e+15         C  None
-                2003-09-10  15:08:21.155000  N        A       None     None   50500.0  24.470          N      00  1.929967e+15         C  None
-                2003-09-10  16:10:35.522000  T        A       None        B   71900.0  24.918          N      00  1.929970e+15         C  None
-                2003-09-10  09:35:20.709000  N       AA       None     None  108100.0  28.200          N      00  1.929947e+15         C  None
-        """
+        # Parameterized SQL query
+        >>> parm = {'syms': ('A', 'AA', 'AAPL'), 'num_shares': 50000}
+        >>> data = db.raw_sql('select * from taqmsec.ctm_20030910 where sym_root in %(syms)s and size > %(num_shares)s', params=parm)
+        >>> data.head()
+                  date           time_m ex sym_root sym_suffix tr_scond      size   price tr_stopind tr_corr     tr_seqnum tr_source tr_rf
+            2003-09-10  11:02:09.485000  T        A       None     None  211400.0  25.350          N      00  1.929952e+15         C  None
+            2003-09-10  11:04:29.508000  N        A       None     None   55500.0  25.180          N      00  1.929952e+15         C  None
+            2003-09-10  15:08:21.155000  N        A       None     None   50500.0  24.470          N      00  1.929967e+15         C  None
+            2003-09-10  16:10:35.522000  T        A       None        B   71900.0  24.918          N      00  1.929970e+15         C  None
+            2003-09-10  09:35:20.709000  N       AA       None     None  108100.0  28.200          N      00  1.929947e+15         C  None
+        """  # noqa
 
         try:
-
             df = pd.read_sql_query(
                 sql,
                 self.connection,
@@ -547,7 +559,8 @@ ORDER BY 1;
                 parse_dates=date_cols,
                 index_col=index_col,
                 chunksize=chunksize,
-                params=params)
+                params=params,
+            )
             if return_iter or chunksize is None:
                 return df
             else:
@@ -558,71 +571,83 @@ ORDER BY 1;
         except sa.exc.ProgrammingError as e:
             raise e
 
-    def get_table(self, library, table, obs=-1, offset=0,
-                  columns=None, coerce_float=None, index_col=None,
-                  date_cols=None):
+    def get_table(
+        self,
+        library,
+        table,
+        obs=-1,
+        offset=0,
+        columns=None,
+        coerce_float=None,
+        index_col=None,
+        date_cols=None,
+    ):
         """
-            Creates a data frame from an entire table in the database.
+        Creates a data frame from an entire table in the database.
 
-            :param sql: SQL code in string object.
-            :param library: Postgres schema name.
+        :param sql: SQL code in string object.
+        :param library: Postgres schema name.
 
-            :param obs: (optional) int, default: -1
-                Specifies the number of observations to pull from the table.
-                An integer less than 0 will return the entire table.
-            :param offset: (optional) int, default: 0
-                Specifies the starting point for the query.
-                An offset of 0 will start selecting from the beginning.
-            :param columns: (optional) list or tuple, default: None
-                Specifies the columns to be included in the output data frame.
-            :param coerce_float: (optional) boolean, default: True
-                Attempt to convert values to non-string, non-numeric objects
-                to floating point. Can result in loss of precision.
-            :param date_cols: (optional) list or dict, default: None
-                - List of column names to parse as date
-                - Dict of ``{column_name: format string}``
-                    where format string is
-                      strftime compatible in case of parsing string times or
-                      is one of (D, s, ns, ms, us) in case of parsing
-                        integer timestamps
-                - Dict of ``{column_name: arg dict}``,
-                    where the arg dict corresponds to the keyword arguments of
-                      :func:`pandas.to_datetime`
-            :param index_col: (optional) string or list of strings,
-              default: None
-                Column(s) to set as index(MultiIndex)
+        :param obs: (optional) int, default: -1
+            Specifies the number of observations to pull from the table.
+            An integer less than 0 will return the entire table.
+        :param offset: (optional) int, default: 0
+            Specifies the starting point for the query.
+            An offset of 0 will start selecting from the beginning.
+        :param columns: (optional) list or tuple, default: None
+            Specifies the columns to be included in the output data frame.
+        :param coerce_float: (optional) boolean, default: True
+            Attempt to convert values to non-string, non-numeric objects
+            to floating point. Can result in loss of precision.
+        :param date_cols: (optional) list or dict, default: None
+            - List of column names to parse as date
+            - Dict of ``{column_name: format string}``
+                where format string is
+                  strftime compatible in case of parsing string times or
+                  is one of (D, s, ns, ms, us) in case of parsing
+                    integer timestamps
+            - Dict of ``{column_name: arg dict}``,
+                where the arg dict corresponds to the keyword arguments of
+                  :func:`pandas.to_datetime`
+        :param index_col: (optional) string or list of strings,
+          default: None
+            Column(s) to set as index(MultiIndex)
 
-            :rtype: pandas.DataFrame
+        :rtype: pandas.DataFrame
 
-            Usage ::
-            >>> data = db.get_table('wrdssec_all', 'dforms', obs=1000, columns=['cik', 'fdate', 'coname'])
-            >>> data.head()
-                cik        fdate       coname
-                0000000003 1995-02-15  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
-                0000000003 1996-02-14  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
-                0000000003 1997-02-19  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
-                0000000003 1998-03-02  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
-                0000000003 1998-03-10  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y..
-                ...
+        Usage ::
+        >>> data = db.get_table('wrdssec_all', 'dforms', obs=1000, columns=['cik', 'fdate', 'coname'])
+        >>> data.head()
+            cik        fdate       coname
+            0000000003 1995-02-15  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
+            0000000003 1996-02-14  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
+            0000000003 1997-02-19  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
+            0000000003 1998-03-02  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
+            0000000003 1998-03-10  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y..
+            ...
 
-        """
+        """  # noqa
         if obs < 0:
-            obsstmt = ''
+            obsstmt = ""
         else:
-            obsstmt = ' LIMIT {}'.format(obs)
+            obsstmt = " LIMIT {}".format(obs)
         if columns is None:
-            cols = '*'
+            cols = "*"
         else:
-            cols = ','.join(columns)
+            cols = ",".join(columns)
         if self.__check_schema_perms(library):
-            sqlstmt = ('SELECT {cols} FROM {schema}.{table} {obsstmt} OFFSET {offset};'.format(
-                       cols=cols,
-                       schema=library,
-                       table=table,
-                       obsstmt=obsstmt,
-                       offset=offset))
+            sqlstmt = (
+                "SELECT {cols} FROM {schema}.{table} {obsstmt} OFFSET {offset};".format(
+                    cols=cols,
+                    schema=library,
+                    table=table,
+                    obsstmt=obsstmt,
+                    offset=offset,
+                )
+            )
             return self.raw_sql(
                 sqlstmt,
                 coerce_float=coerce_float,
                 index_col=index_col,
-                date_cols=date_cols)
+                date_cols=date_cols,
+            )
