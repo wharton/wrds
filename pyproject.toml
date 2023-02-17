@@ -8,10 +8,10 @@ build-backend = "setuptools.build_meta"
 name = "wrds"
 description = "Access WRDS data through PostgreSQL in Python."
 authors =  [
-    {name = "Eric Stein", email = "ericst@wharton.upenn.edu"},
     {name = "Alex Malek", email = "amalek@wharton.upenn.edu"},
     {name = "Tim Allen", email = "tallen@wharton.upenn.edu"},
     {name = "Jeff VanSickle", email = "vjef@wharton.upenn.edu"},
+    {name = "Eric Stein", email = "ericst@wharton.upenn.edu"},
 ]
 license = {text = "BSD-3-Clause"}
 readme = "README.rst"
