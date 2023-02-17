@@ -1,47 +1,47 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "wrds"
-version = "3.1.3"
-description = "Python access to WRDS Data"
+description = "Access WRDS data through PostgreSQL in Python."
 authors =  [
-    {name="Eric Stein", email="ericst@wharton.upenn.edu"},
-    {name="Alex Malek", email="amalek@wharton.upenn.edu"},
+    {name = "Eric Stein", email = "ericst@wharton.upenn.edu"},
+    {name = "Alex Malek", email = "amalek@wharton.upenn.edu"},
+    {name = "Tim Allen", email = "tallen@wharton.upenn.edu"},
+    {name = "Jeff VanSickle", email = "vjef@wharton.upenn.edu"},
 ]
-license = { file="LICENSE" }
+license = {text = "BSD-3-Clause"}
 readme = "README.rst"
-requires-python = ">=3.6"
-
+requires-python = ">=3.7"
 keywords = ["wrds", "finance", "research", "crsp", "compustat"]
-
 classifiers = [
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Development Status :: 5 - Production/Stable',
-        'Environment :: Console',
-        'Intended Audience :: End Users/Desktop',
-        'Intended Audience :: Financial and Insurance Industry',
-        'Intended Audience :: Education',
-        'Intended Audience :: Science/Research',
-        'Topic :: Office/Business :: Financial',
-        'Topic :: Scientific/Engineering :: Information Analysis',
-        ]
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "License :: OSI Approved :: BSD License",
+]
+dependencies = [
+    "numpy",
+    "pandas",
+    "psycopg2-binary",
+    "scipy",
+    "sqlalchemy<2",
+]
+dynamic = ["version"]
 
 [project.urls]
-"Homepage" = "http://www.whartonwrds.com"
+"Homepage" = "http://wrds-www.wharton.upenn.edu"
 "Repository" = "https://github.com/wharton/wrds"
-"Documentation" = "https://wrds-www.wharton.upenn.edu/pages/support/programming-wrds/programming-python/"
-
-[dependencies]
-mock = "~4.0"
-numpy = "~1.20"
-pandas= "~1.2"
-psycopg2-binary = "~2.8"
-scipy = "~1.6"
-SQLAlchemy = "~1.4"
-
-[build-system]
-# These are the assumed default build requirements from pip:
-# https://pip.pypa.io/en/stable/reference/pip/#pep-517-and-518-support
-requires = ["setuptools>=40.8.0", "wheel"]
-build-backend = "setuptools.build_meta"
+"Documentation" = "https://github.com/wharton/wrds/blob/master/README.rst"
