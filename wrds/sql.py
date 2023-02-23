@@ -32,31 +32,31 @@ class SchemaNotFoundError(FileNotFoundError):
 class Connection(object):
     def __init__(self, autoconnect=True, verbose=False, **kwargs):
         """
-Set up the connection to the WRDS database.
-By default, also establish the connection to the database.
+        Set up the connection to the WRDS database.
+        By default, also establish the connection to the database.
 
-Optionally, the user may specify connection parameters:
-    *wrds_hostname*: WRDS database hostname
-    *wrds_port*: database connection port number
-    *wrds_dbname*: WRDS database name
-    *wrds_username*: WRDS username
-    *autoconnect*: If false will not immediately establish the connection
+        Optionally, the user may specify connection parameters:
+            *wrds_hostname*: WRDS database hostname
+            *wrds_port*: database connection port number
+            *wrds_dbname*: WRDS database name
+            *wrds_username*: WRDS username
+            *autoconnect*: If false will not immediately establish the connection
 
-The constructor will use the .pgpass file if it exists and may make use of
-PostgreSQL environment variables such as PGHOST, PGUSER, etc., if cooresponding
-parameters are not set.
-If not, it will ask the user for a username and password.
-It will also direct the user to information on setting up .pgpass.
+        The constructor will use the .pgpass file if it exists and may make use of
+        PostgreSQL environment variables such as PGHOST, PGUSER, etc., if cooresponding
+        parameters are not set.
+        If not, it will ask the user for a username and password.
+        It will also direct the user to information on setting up .pgpass.
 
-Additionally, creating the instance will load a list of schemas
-    the user has permission to access.
+        Additionally, creating the instance will load a list of schemas
+        the user has permission to access.
 
-:return: None
+        :return: None
 
-Usage::
->>> db = wrds.Connection()
-Loading library list...
-Done
+        Usage::
+        >>> db = wrds.Connection()
+        Loading library list...
+        Done
         """
         self._verbose = verbose
         self._password = ""
@@ -74,7 +74,7 @@ Done
             self.connect()
             self.load_library_list()
 
-    def __make_sa_engine_conn(self, raise_err = False):
+    def __make_sa_engine_conn(self, raise_err=False):
         username = self._username
         hostname = self._hostname
         password = urllib.parse.quote_plus(self._password)
@@ -127,7 +127,7 @@ Done
                     try:
                         self.create_pgpass_file()
                         print("Created .pgpass file successfully.")
-                    except:
+                    except Exception:
                         print("Failed to create .pgpass file.")
                 print(
                     "You can create this file yourself at any time "
@@ -216,7 +216,7 @@ ORDER BY 1;
 
     def create_pgpass_file(self):
         """
-        Create a .pgpass file to store WRDS connection credentials..
+        Create a .pgpass file to store WRDS connection credentials.
 
         Use the existing username and password if already connected to WRDS,
          or prompt for that information if not.
