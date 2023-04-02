@@ -92,7 +92,7 @@ class Connection(object):
             self.connection = self.engine.connect()
         except Exception as err:
             if self._verbose:
-                print(f"{err=}")
+                print(f"{err}")
             self.engine = None
             if raise_err:
                 raise err
