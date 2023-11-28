@@ -40,7 +40,7 @@ dependencies = [
     "pandas",
     "psycopg2-binary",
     "scipy",
-    "sqlalchemy<2",
+    "sqlalchemy",
 ]
 dynamic = ["version"]
 

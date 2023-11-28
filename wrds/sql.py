@@ -5,6 +5,7 @@ import stat
 import pandas as pd
 import sqlalchemy as sa
 import urllib.parse
+from packaging import version
 from wrds import __version__ as wrds_version
 
 from sys import version_info
@@ -191,7 +192,10 @@ JOIN schemas nt ON t.relnamespace = nt.oid
 GROUP BY nv.schemaname
 ORDER BY 1;
         """
-        cursor = self.connection.execute(query)
+        if version.parse(sa.__version__) > version.parse("2"):
+            cursor = self.connection.exec_driver_sql(query)
+        else:
+            cursor = self.connection.execute(query)
         self.schema_perm = [x[0] for x in cursor.fetchall()]
         print("Done")
 
@@ -428,7 +432,10 @@ ORDER BY 1;
             schema=schema, view=table
         )
         if self.__check_schema_perms(schema):
-            result = self.connection.execute(sql_code)
+            if version.parse(sa.__version__) > version.parse("2"):
+                result = self.connection.exec_driver_sql(sql_code)
+            else:
+                result = self.connection.execute(sql_code)
             return result.fetchone()[0]
 
     def describe_table(self, library, table):
@@ -480,7 +487,10 @@ ORDER BY 1;
         )
 
         try:
-            result = self.connection.execute(sqlstmt)
+            if version.parse(sa.__version__) > version.parse("2"):
+                result = self.connection.exec_driver_sql(sqlstmt)
+            else:
+                result = self.connection.execute(sqlstmt)
             return int(result.fetchone()[0][0]["Plan"]["Plan Rows"])
         except Exception as e:
             print("There was a problem with retrieving the row count: {}".format(e))
