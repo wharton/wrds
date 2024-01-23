@@ -38,6 +38,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy",
+    "packaging",
     "pandas",
     "psycopg2-binary",
     "scipy",
