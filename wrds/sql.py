@@ -586,7 +586,8 @@ ORDER BY 1;
         self,
         library,
         table,
-        obs=-1,
+        rows=-1,
+        obs=None,  # Provided for backward compatibility. This is Python, we use rows.
         offset=0,
         columns=None,
         coerce_float=None,
@@ -599,9 +600,12 @@ ORDER BY 1;
         :param sql: SQL code in string object.
         :param library: Postgres schema name.
 
-        :param obs: (optional) int, default: -1
-            Specifies the number of observations to pull from the table.
+        :param rows: (optional) int, default: -1
+            Specifies the number of rows to pull from the table.
             An integer less than 0 will return the entire table.
+        :param obs: (optional) int, default: None
+            Specifies the number of rows to pull from the table.
+            Provided for backward compatibility.
         :param offset: (optional) int, default: 0
             Specifies the starting point for the query.
             An offset of 0 will start selecting from the beginning.
@@ -627,7 +631,7 @@ ORDER BY 1;
         :rtype: pandas.DataFrame
 
         Usage ::
-        >>> data = db.get_table('wrdssec_all', 'dforms', obs=1000, columns=['cik', 'fdate', 'coname'])
+        >>> data = db.get_table('wrdssec_all', 'dforms', rows=1000, columns=['cik', 'fdate', 'coname'])
         >>> data.head()
             cik        fdate       coname
             0000000003 1995-02-15  DEFINED ASSET FUNDS MUNICIPAL INVT TR FD NEW Y...
@@ -638,21 +642,26 @@ ORDER BY 1;
             ...
 
         """  # noqa
-        if obs < 0:
-            obsstmt = ""
+
+        # Provide backward compatibility for `obs` instead of rows.
+        if obs is not None:
+            rows = obs
+
+        if rows < 0:
+            rowsstmt = ""
         else:
-            obsstmt = " LIMIT {}".format(obs)
+            rowsstmt = " LIMIT {}".format(rows)
         if columns is None:
             cols = "*"
         else:
             cols = ",".join(columns)
         if self.__check_schema_perms(library):
             sqlstmt = (
-                "SELECT {cols} FROM {schema}.{table} {obsstmt} OFFSET {offset};".format(
+                "SELECT {cols} FROM {schema}.{table} {rowsstmt} OFFSET {offset}".format(
                     cols=cols,
                     schema=library,
                     table=table,
-                    obsstmt=obsstmt,
+                    rowsstmt=rowsstmt,
                     offset=offset,
                 )
             )
