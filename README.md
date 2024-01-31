@@ -1,10 +1,10 @@
 # WRDS-Py from Wharton Research Data Services
 
-WRDS-Py is a Python package for examining datasets on the [Wharton Research Data Services (WRDS)](https://wrds-www.wharton.upenn.edu) platform, and extracting it to Pandas dataframes. A WRDS account is required.
+WRDS-Py is a Python package for examining datasets on the [Wharton Research Data Services (WRDS)](https://wrds-www.wharton.upenn.edu) platform, and extracting data to Pandas dataframes. A WRDS account is required.
 
 ## Installation
 
-The WRDS-Py package requires Python 3.8 or newer. To ensure you have a supported Python version, type `python --version` at a command line interface, and check that it is greater than 3.8.
+The WRDS-Py package requires Python 3.8 or newer. To ensure you have a supported Python version, type `python --version` at a command line interface, and check that it is greater than 3.8. On some systems, Python may be in installed as `python3`. You can [download Python here](https://www.python.org/downloads/) if it isn't installed.
 
 The WRDS-Py package must be installed before it can be used for the first time. The recommended method is to use a [virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) (`venv`), so you can `import` it to use in Python. This example will install the WRDS-Py package (`wrds`) and [IPython](https://ipython.org/), which provides a much nicer command line interface than is included with Python.
 
