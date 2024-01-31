@@ -8,6 +8,7 @@ write_to = "wrds/_version.py"
 [project]
 name = "wrds"
 description = "Access WRDS data through PostgreSQL in Python."
+long_description = "WRDS-Py is a Python package for examining datasets on the WRDS platform, and extracting data to Pandas dataframes. A WRDS account is required."
 authors =  [
     {name = "Alex Malek", email = "amalek@wharton.upenn.edu"},
     {name = "Tim Allen", email = "tallen@wharton.upenn.edu"},
