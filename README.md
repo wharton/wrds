@@ -1,4 +1,4 @@
-# WRDS Python Data Access Library
+# WRDS-Py from Wharton Research Data Services
 
 WRDS-Py is a Python package for examining datasets on the [Wharton Research Data Services (WRDS)](https://wrds-www.wharton.upenn.edu) platform, and extracting it to Pandas dataframes. A WRDS account is required.
 
