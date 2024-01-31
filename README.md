@@ -1,12 +1,12 @@
-# WRDS Python Data Access Library
+# WRDS-Py from Wharton Research Data Services
 
-WRDS-Py is a Python package for examining datasets on the [Wharton Research Data Services (WRDS)](https://wrds-www.wharton.upenn.edu) platform, and extracting it to Pandas dataframes. A WRDS account is required.
+WRDS-Py is a Python package for examining datasets on the [Wharton Research Data Services (WRDS)](https://wrds-www.wharton.upenn.edu) platform, and extracting data to Pandas dataframes. A WRDS account is required.
 
 ## Installation
 
-Before installing the WRDS-Py package, make sure you have a supported version of Python. At a command line interface, type `python --version`, and make sure it is 3.8 or higher.
+The WRDS-Py package requires Python 3.8 or newer. To ensure you have a supported Python version, type `python --version` at a command line interface, and check that it is greater than 3.8. On some systems, Python may be in installed as `python3`. You can [download Python here](https://www.python.org/downloads/) if it isn't installed.
 
-The WRDS-Py package must be installed before it can be used for the first time. The best way to do this is to use a [virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/), or `venv`, so you can `import` it to use in Python. In this example, we will show the a Linux prompt (`$`), This example will also [install IPython](https://ipython.org/), which provides a nice command-line interface.
+The WRDS-Py package must be installed before it can be used for the first time. The recommended method is to use a [virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) (`venv`), so you can `import` it to use in Python. This example will install the WRDS-Py package (`wrds`) and [IPython](https://ipython.org/), which provides a much nicer command line interface than is included with Python.
 
 #### Linux or MacOS
 
@@ -47,25 +47,25 @@ For detailed information on use of the module, please see [Querying WRDS Data us
 A quick tutorial:
 
 ```
->>> import wrds
->>> db = wrds.Connection()
+In [1]: import wrds
+In [2]: db = wrds.Connection()
 Enter your credentials.
 Username: <your_username>
 Password: <your_password>
->>> db.list_libraries()
+In [3]: db.list_libraries()
 ['audit', 'bank', 'block', 'bvd', 'bvdtrial', 'cboe', ...]
->>> db.list_tables(library='crsp')
+In [4]: db.list_tables(library="crsp")
 ['aco_amda', 'aco_imda', 'aco_indfnta', 'aco_indfntq', ...]
->>> db.describe_table(library='crsp', table='stocknames')
+In [5]: db.describe_table(library="crsp", table="stocknames")
 Approximately 58957 rows in crsp.stocknames.
        name    nullable              type
-0      permno      True  DOUBLE PRECISION      
-1      permco      True  DOUBLE PRECISION      
-2      namedt      True              DATE
+0      permno      True  DOUBLE PRECISION
+1      namedt      True              DATE
+2   nameenddt      True              DATE
 ...
 
->>> stocknames = db.get_table(library='crsp', table='stocknames', rows=10) 
->>> stocknames.head()
+In [6]: stocknames = db.get_table(library="crsp", table="stocknames", rows=10)
+In [7]: stocknames.head()
    permno  permco      namedt   nameenddt     cusip    ncusip ticker  \
 0  10000.0  7952.0  1986-01-07  1987-06-11  68391610  68391610  OMFGA
 1  10001.0  7953.0  1986-01-09  1993-11-21  36720410  39040610   GFGC
@@ -73,11 +73,11 @@ Approximately 58957 rows in crsp.stocknames.
 3  10001.0  7953.0  2008-02-05  2009-08-03  36720410  29274A20   EWST
 4  10001.0  7953.0  2009-08-04  2009-12-17  36720410  29269V10   EGAS
 
->>> db.close()  # Close the connection to the database...
+In [7]: db.close()  # Close the connection to the database.
 
->>> with wrds.Connection() as db:  # You can use a context manager
-...    stocknames = db.get_table(library='crsp', table='stocknames', rows=10)
->>> stocknames.head()
+In [8]: with wrds.Connection() as db:  # You can use a context manager
+   ...:     stocknames = db.get_table(library='crsp', table='stocknames', rows=10)
+   ...: stocknames.head()
    permno  permco      namedt   nameenddt     cusip    ncusip ticker  \
 0  10000.0  7952.0  1986-01-07  1987-06-11  68391610  68391610  OMFGA
 1  10001.0  7953.0  1986-01-09  1993-11-21  36720410  39040610   GFGC

@@ -16,7 +16,7 @@ authors =  [
 ]
 license = {text = "BSD-3-Clause"}
 readme = "README.rst"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 keywords = ["wrds", "finance", "research", "crsp", "compustat"]
 classifiers = [
     "Programming Language :: Python",
@@ -37,12 +37,12 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
 ]
 dependencies = [
-    "numpy<1.27",
+    "numpy>=1.26,<1.27",
     "packaging<23.3",
-    "pandas<2.3",
-    "psycopg2-binary<2.10",
-    "scipy<1.13",
-    "sqlalchemy<2.1",
+    "pandas>=2.2,<2.3",
+    "psycopg2-binary>=2.9,<2.10",
+    "scipy>=1.12,<1.13",
+    "sqlalchemy>=2,<2.1",
 ]
 dynamic = ["version"]
 
