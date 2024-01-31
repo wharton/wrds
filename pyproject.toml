@@ -8,14 +8,13 @@ write_to = "wrds/_version.py"
 [project]
 name = "wrds"
 description = "Access WRDS data through PostgreSQL in Python."
-long_description = "WRDS-Py is a Python package for examining datasets on the WRDS platform, and extracting data to Pandas dataframes. A WRDS account is required."
 authors =  [
     {name = "Alex Malek", email = "amalek@wharton.upenn.edu"},
     {name = "Tim Allen", email = "tallen@wharton.upenn.edu"},
     {name = "Jeff VanSickle", email = "vjef@wharton.upenn.edu"},
 ]
 license = {text = "BSD-3-Clause"}
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">=3.8"
 keywords = ["wrds", "finance", "research", "crsp", "compustat"]
 classifiers = [
@@ -49,4 +48,4 @@ dynamic = ["version"]
 [project.urls]
 "Homepage" = "http://wrds-www.wharton.upenn.edu"
 "Repository" = "https://github.com/wharton/wrds"
-"Documentation" = "https://github.com/wharton/wrds/blob/master/README.rst"
+"Documentation" = "https://github.com/wharton/wrds/blob/master/README.md"
