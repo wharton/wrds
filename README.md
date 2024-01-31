@@ -4,9 +4,9 @@ WRDS-Py is a Python package for examining datasets on the [Wharton Research Data
 
 ## Installation
 
-Before installing the WRDS-Py package, make sure you have a supported version of Python. At a command line interface, type `python --version`, and make sure it is 3.8 or higher.
+The WRDS-Py package requires Python 3.8 or newer. To ensure you have a supported Python version, type `python --version` at a command line interface, and check that it is greater than 3.8.
 
-The WRDS-Py package must be installed before it can be used for the first time. The best way to do this is to use a [virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/), or `venv`, so you can `import` it to use in Python. In this example, we will show the a Linux prompt (`$`), This example will also [install IPython](https://ipython.org/), which provides a nice command-line interface.
+The WRDS-Py package must be installed before it can be used for the first time. The recommended method is to use a [virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) (`venv`), so you can `import` it to use in Python. This example will install the WRDS-Py package (`wrds`) and [IPython](https://ipython.org/), which provides a much nicer command line interface than is included with Python.
 
 #### Linux or MacOS
 
