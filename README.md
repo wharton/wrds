@@ -75,9 +75,9 @@ In [7]: stocknames.head()
 
 In [7]: db.close()  # Close the connection to the database.
 
->>> with wrds.Connection() as db:  # You can use a context manager
-...    stocknames = db.get_table(library='crsp', table='stocknames', rows=10)
->>> stocknames.head()
+In [8]: with wrds.Connection() as db:  # You can use a context manager
+   ...:     stocknames = db.get_table(library='crsp', table='stocknames', rows=10)
+   ...: stocknames.head()
    permno  permco      namedt   nameenddt     cusip    ncusip ticker  \
 0  10000.0  7952.0  1986-01-07  1987-06-11  68391610  68391610  OMFGA
 1  10001.0  7953.0  1986-01-09  1993-11-21  36720410  39040610   GFGC
