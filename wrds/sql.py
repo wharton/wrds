@@ -505,6 +505,7 @@ ORDER BY 1;
         params=None,
         chunksize=500000,
         return_iter=False,
+        dtype_backend="numpy_nullable",
     ):
         """
         Queries the database using a raw SQL string.
@@ -534,6 +535,9 @@ ORDER BY 1;
         :param return_iter: (optional) boolean, default:False
             When chunksize is not None, return an iterator where chunksize
             number of rows is included in each chunk.
+        :param dtype_backend: (optional) string
+          default: "numpy_nullable"
+            Allow backend storage type to be changed. e.g. "pyarrow"
 
         :rtype: pandas.DataFrame or or Iterator[pandas.DataFrame]
 
@@ -571,6 +575,7 @@ ORDER BY 1;
                 index_col=index_col,
                 chunksize=chunksize,
                 params=params,
+                dtype_backend=dtype_backend,
             )
             if return_iter or chunksize is None:
                 return df
