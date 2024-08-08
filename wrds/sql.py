@@ -512,7 +512,7 @@ ORDER BY 1;
 
         :param sql: SQL code in string object.
         :param coerce_float: (optional) boolean, default: True
-            Attempt to convert values to non-string, non-numeric objects
+            Attempts to convert values of non-string, non-numeric objects
             to floating point. Can result in loss of precision.
         :param date_cols: (optional) list or dict, default: None
             - List of column names to parse as date
