@@ -505,6 +505,7 @@ ORDER BY 1;
         params=None,
         chunksize=500000,
         return_iter=False,
+        dtype=None,
         dtype_backend="numpy_nullable",
     ):
         """
@@ -535,6 +536,10 @@ ORDER BY 1;
         :param return_iter: (optional) boolean, default:False
             When chunksize is not None, return an iterator where chunksize
             number of rows is included in each chunk.
+        :param dtype: (optional) Type name or dict of columns
+          default: None
+            Data type for data or columns. E.g. np.float64 or
+            {'a': np.float64, 'b': np.int32, 'c': 'Int64'}.
         :param dtype_backend: (optional) string
           default: "numpy_nullable"
             Allow backend storage type to be changed. e.g. "pyarrow"
@@ -575,6 +580,7 @@ ORDER BY 1;
                 index_col=index_col,
                 chunksize=chunksize,
                 params=params,
+                dtype=dtype,
                 dtype_backend=dtype_backend,
             )
             if return_iter or chunksize is None:
