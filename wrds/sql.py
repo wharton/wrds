@@ -595,7 +595,7 @@ ORDER BY 1;
         obs=None,  # Provided for backward compatibility. This is Python, we use rows.
         offset=0,
         columns=None,
-        coerce_float=None,
+        coerce_float=True,
         index_col=None,
         date_cols=None,
     ):
