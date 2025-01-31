@@ -36,11 +36,9 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
 ]
 dependencies = [
-    "numpy>=1.26,<1.27",
-    "packaging<23.3",
+    "packaging<=24.2",
     "pandas>=2.2,<2.3",
     "psycopg2-binary>=2.9,<2.10",
-    "scipy>=1.12,<1.13",
     "sqlalchemy>=2,<2.1",
 ]
 dynamic = ["version"]
