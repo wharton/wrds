@@ -3,6 +3,7 @@ __pycache__
 docs/build/
 build/
 dist/
+venv/
 *egg-info*
 *.ipynb
 .ipynb_checkpoints

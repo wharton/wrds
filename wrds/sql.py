@@ -219,7 +219,7 @@ ORDER BY 1;
         return username, passwd
 
     def create_pgpass_file(self):
-        """
+        r"""
         Create a .pgpass file to store WRDS connection credentials.
 
         Use the existing username and password if already connected to WRDS,
@@ -245,7 +245,7 @@ ORDER BY 1;
             self.__create_pgpass_file_unix()
 
     def __create_pgpass_file_win32(self):
-        """
+        r"""
         Create a pgpass.conf file on Windows.
 
         Windows is different enough from everything else
@@ -294,7 +294,7 @@ ORDER BY 1;
         """
         pgpass = "{host}:{port}:{dbname}:{user}:{passwd}\n"
         passwd = self._password
-        passwd = passwd.replace(":", "\:")
+        passwd = passwd.replace(":", r"\:")
         # Avoid clobbering the file if it exists
         if os.path.isfile(pgfile):
             with open(pgfile, "r") as fd:
@@ -305,7 +305,7 @@ ORDER BY 1;
                 #  split() from splitting on them.
                 # Saving to a new variable here absolves us
                 #  of having to re-replace the substituted ##COLON## later.
-                oldline = line.replace("""\:""", "##COLON##")
+                oldline = line.replace(r"\:", "##COLON##")
                 fields = oldline.split(":")
                 # On finding a line matching the hostname, port and dbname
                 #  we replace it with the new pgpass line.
