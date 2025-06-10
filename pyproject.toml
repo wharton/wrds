@@ -11,7 +11,6 @@ description = "Access WRDS data through PostgreSQL in Python."
 authors =  [
     {name = "Alex Malek", email = "amalek@wharton.upenn.edu"},
     {name = "Tim Allen", email = "tallen@wharton.upenn.edu"},
-    {name = "Jeff VanSickle", email = "vjef@wharton.upenn.edu"},
 ]
 license = {text = "BSD-3-Clause"}
 readme = "README.md"
