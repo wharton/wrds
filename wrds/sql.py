@@ -60,9 +60,9 @@ class Connection(object):
         Done
         """
         self._verbose = verbose
-        self._password = ""
-        # If user passed in any of these parameters, override defaults.
+        # If user or password is passed in any of these parameters, override defaults.
         self._username = kwargs.get("wrds_username", "")
+        self._password = kwargs.get("wrds_password", "")                        
         # PGHOST if set will override default for first attempt
         self._hostname = kwargs.get(
             "wrds_hostname", os.environ.get('PGHOST', WRDS_POSTGRES_HOST)
@@ -251,6 +251,17 @@ ORDER BY 1;
         Windows is different enough from everything else
           as to require its own special way of doing things.
         Save the pgpass file in %APPDATA%\postgresql as 'pgpass.conf'.
+        
+        Note: The Microsoft Store version of Python virtiualizes the %APPDATA% directory. 
+        Rather than writing to the standard %APPDATA%\postgresql\pgpass.conf,
+        it writes to a virtualized path inside Microsoft Store's LocalCache\Roaming directory.
+        If you debug this Python code, it shows that it writes to a standard %APPDATA%\postgresql\pgpass.conf,
+        but it lies and actually writes to a virtualized path inside Microsoft Store's LocalCache\Roaming directory.
+
+        In general, it should not apply as this python code as it is not writing to Program Files or Program Files (x86). But the
+        Microsoft Store version of Python does -- so it is marked for virtualization.
+
+        See https://tinyurl.com/4dz4kcys for more information.
         """
         appdata = os.getenv("APPDATA")
         pgdir = appdata + os.path.sep + "postgresql"
@@ -264,6 +275,12 @@ ORDER BY 1;
         pgfile = pgdir + os.path.sep + "pgpass.conf"
         # Write the pgpass.conf file without clobbering
         self.__write_pgpass_file(pgfile)
+
+        from pathlib import Path                              
+        pgfile_resolved = os.path.expandvars(pgfile)          
+        pgfile_resolved = str(Path(pgfile).resolve())         
+        print(f"pgpass file created at {pgfile_resolved}")
+
 
     def __create_pgpass_file_unix(self):
         """
