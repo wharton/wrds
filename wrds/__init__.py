@@ -23,6 +23,7 @@ WRDS-Py is a library for extracting data from WRDS data sources and getting it i
     10001.0  7953.0  2009-08-04  2009-12-17  36720410  29269V10   EGAS
     ...
 """
+
 from wrds._version import __version__
 from datetime import date
 

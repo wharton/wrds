@@ -6,6 +6,7 @@ import pandas as pd
 import sqlalchemy as sa
 import urllib.parse
 from packaging import version
+from pathlib import Path
 from wrds import __version__ as wrds_version
 
 from sys import version_info
@@ -62,10 +63,10 @@ class Connection(object):
         self._verbose = verbose
         # If user or password is passed in any of these parameters, override defaults.
         self._username = kwargs.get("wrds_username", "")
-        self._password = kwargs.get("wrds_password", "")                        
+        self._password = kwargs.get("wrds_password", "")
         # PGHOST if set will override default for first attempt
         self._hostname = kwargs.get(
-            "wrds_hostname", os.environ.get('PGHOST', WRDS_POSTGRES_HOST)
+            "wrds_hostname", os.environ.get("PGHOST", WRDS_POSTGRES_HOST)
         )
         self._port = kwargs.get("wrds_port", WRDS_POSTGRES_PORT)
         self._dbname = kwargs.get("wrds_dbname", WRDS_POSTGRES_DB)
@@ -103,19 +104,19 @@ class Connection(object):
         # first try connection using system defaults and params set in constructor
         self.__make_sa_engine_conn()
 
-        if (self.engine is None and self._hostname != WRDS_POSTGRES_HOST):
+        if self.engine is None and self._hostname != WRDS_POSTGRES_HOST:
             # try explicit w/ default hostname
             print(f"Trying '{WRDS_POSTGRES_HOST}'...")
             self._hostname = WRDS_POSTGRES_HOST
             self.__make_sa_engine_conn()
 
-        if (self.engine is None):
+        if self.engine is None:
             # Use explicit username and password
             self._username, self._password = self.__get_user_credentials()
             # Last attempt, raise error if Exception encountered
             self.__make_sa_engine_conn(raise_err=True)
 
-            if (self.engine is None):
+            if self.engine is None:
                 print(f"Failed to connect {self._username}@{self._hostname}")
             else:
                 # Connection successful. Offer to create a .pgpass for the user.
@@ -251,8 +252,8 @@ ORDER BY 1;
         Windows is different enough from everything else
           as to require its own special way of doing things.
         Save the pgpass file in %APPDATA%\postgresql as 'pgpass.conf'.
-        
-        Note: The Microsoft Store version of Python virtiualizes the %APPDATA% directory. 
+
+        Note: The Microsoft Store version of Python virtiualizes the %APPDATA% directory.
         Rather than writing to the standard %APPDATA%\postgresql\pgpass.conf,
         it writes to a virtualized path inside Microsoft Store's LocalCache\Roaming directory.
         If you debug this Python code, it shows that it writes to a standard %APPDATA%\postgresql\pgpass.conf,
@@ -276,11 +277,9 @@ ORDER BY 1;
         # Write the pgpass.conf file without clobbering
         self.__write_pgpass_file(pgfile)
 
-        from pathlib import Path                              
-        pgfile_resolved = os.path.expandvars(pgfile)          
-        pgfile_resolved = str(Path(pgfile).resolve())         
+        pgfile_resolved = os.path.expandvars(pgfile)
+        pgfile_resolved = str(Path(pgfile).resolve())
         print(f"pgpass file created at {pgfile_resolved}")
-
 
     def __create_pgpass_file_unix(self):
         """
@@ -386,8 +385,9 @@ ORDER BY 1;
         else:
             if schema in self.insp.get_schema_names():
                 raise NotSubscribedError(
-                    "You do not have permission to access "
-                    "the {} library".format(schema)
+                    "You do not have permission to access " "the {} library".format(
+                        schema
+                    )
                 )
             else:
                 raise SchemaNotFoundError("The {} library is not found.".format(schema))
@@ -445,9 +445,7 @@ ORDER BY 1;
                         ON source_ns.oid = source_table.relnamespace
                       WHERE dependent_ns.nspname = '{schema}'
                         AND dependent_view.relname = '{view}';
-                    """.format(
-            schema=schema, view=table
-        )
+                    """.format(schema=schema, view=table)
         if self.__check_schema_perms(schema):
             if version.parse(sa.__version__) > version.parse("2"):
                 result = self.connection.exec_driver_sql(sql_code)
@@ -499,9 +497,7 @@ ORDER BY 1;
 
         sqlstmt = """
             EXPLAIN (FORMAT 'json')  SELECT 1 FROM {}.{} ;
-        """.format(
-            sa.sql.quoted_name(library, True), sa.sql.quoted_name(table, True)
-        )
+        """.format(sa.sql.quoted_name(library, True), sa.sql.quoted_name(table, True))
 
         try:
             if version.parse(sa.__version__) > version.parse("2"):
