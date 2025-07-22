@@ -47,8 +47,8 @@ master_doc = "index"
 
 # General information about the project.
 project = "wrds-py"
-copyright = "2016, Eric Stein"
-author = "Eric Stein"
+copyright = "2016 - 2025 Wharton Research Data Services"
+author = "Various Authors"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
