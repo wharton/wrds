@@ -1,15 +1,17 @@
 import getpass
 import os
-import sys
 import stat
-import pandas as pd
-import sqlalchemy as sa
+import sys
 import urllib.parse
 from pathlib import Path
+
+import pandas as pd
+import sqlalchemy as sa
+
 from wrds._version import __version_tuple__ as wrds_version
 
-appname = "{0} python {1}.{2}.{3}/wrds {4}".format(
-    sys.platform, wrds_version[0], wrds_version[1], wrds_version[2], wrds_version
+appname = "{0} python {1}.{2}.{3}/wrds".format(
+    sys.platform, wrds_version[0], wrds_version[1], wrds_version[2]
 )
 
 # Sane defaults
@@ -264,7 +266,7 @@ ORDER BY 1;
             os.mkdir(pgdir)
         # Path exists, but is not a directory
         elif not os.path.isdir(pgdir):
-            err = "Cannot create directory {}: " "path exists but is not a directory"
+            err = "Cannot create directory {}: path exists but is not a directory"
             raise FileExistsError(err.format(pgdir))
         pgfile = pgdir + os.path.sep + "pgpass.conf"
         # Write the pgpass.conf file without clobbering
@@ -378,9 +380,7 @@ ORDER BY 1;
         else:
             if schema in self.insp.get_schema_names():
                 raise NotSubscribedError(
-                    "You do not have permission to access " "the {} library".format(
-                        schema
-                    )
+                    "You do not have permission to access the {} library".format(schema)
                 )
             else:
                 raise SchemaNotFoundError("The {} library is not found.".format(schema))

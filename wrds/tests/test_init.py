@@ -1,5 +1,6 @@
-import wrds
 from unittest import mock
+
+import wrds
 
 
 def test_init_calls_sqlalchemy_create_engine_defaults(mock_sa=None):

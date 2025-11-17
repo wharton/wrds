@@ -1,5 +1,5 @@
-from unittest import mock
 import urllib.parse
+from unittest import mock
 
 
 def test_connect_calls_sqlalchemy_engine_connect(mock_connection):
@@ -28,6 +28,7 @@ def test_connect_calls_get_user_credentials_on_exception(mock_connection):
 def test_connect_calls_sqlalchemy_create_engine_on_exception(mock_connection):
     """Test connect calls sqlalchemy create_engine when engine.connect raises exception."""
     import wrds
+
     with mock.patch("wrds.sql.sa") as mock_sa:
         with mock.patch("builtins.input", return_value="n"):
             # Make create_engine fail twice, then succeed on third attempt

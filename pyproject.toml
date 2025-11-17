@@ -2,6 +2,16 @@
 requires = ["setuptools>=67", "setuptools_scm>=7", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.coverage.run]
+omit = ["./tests/*", "*/worker-base/*"]
+
+[tool.pytest.ini_options]
+addopts = "--tb=short --cov --cov-report=html"
+norecursedirs = [".git", ".vscode"]
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
 [tool.setuptools_scm]
 write_to = "wrds/_version.py"
 

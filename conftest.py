@@ -1,18 +1,13 @@
-# -*- coding: utf-8 -*-
-"""
-pytest configuration and shared fixtures for wrds tests
-"""
+from unittest import mock
+
 import pytest
-try:
-    from unittest import mock
-except ImportError:
-    import mock
 
 
 @pytest.fixture
 def mock_connection():
     """Create a mock wrds.Connection instance for testing."""
     import wrds
+
     conn = wrds.Connection(autoconnect=False)
     conn._hostname = "wrds.test.private"
     conn._port = 12345

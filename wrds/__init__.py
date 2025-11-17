@@ -24,11 +24,10 @@ WRDS-Py is a library for extracting data from WRDS data sources and getting it i
     ...
 """
 
-from wrds._version import __version__
 from datetime import date
 
 __title__ = "wrds-py"
 __author__ = "Wharton Research Data Services"
 __copyright__ = f"2017 - {date.today().year} Wharton Research Data Services"
 
-from .sql import Connection
+from .sql import Connection as Connection

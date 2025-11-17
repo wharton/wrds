@@ -1,6 +1,7 @@
 import sys
-import pytest
 from unittest import mock
+
+import pytest
 
 
 def test_create_pgpass_calls_get_user_credentials_if_not_username(mock_connection):
