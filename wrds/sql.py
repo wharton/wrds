@@ -5,16 +5,12 @@ import stat
 import pandas as pd
 import sqlalchemy as sa
 import urllib.parse
-from packaging import version
 from pathlib import Path
-from wrds import __version__ as wrds_version
-
-from sys import version_info
+from wrds._version import __version_tuple__ as wrds_version
 
 appname = "{0} python {1}.{2}.{3}/wrds {4}".format(
-    sys.platform, version_info[0], version_info[1], version_info[2], wrds_version
+    sys.platform, wrds_version[0], wrds_version[1], wrds_version[2], wrds_version
 )
-
 
 # Sane defaults
 WRDS_POSTGRES_HOST = "wrds-pgdata.wharton.upenn.edu"
@@ -193,10 +189,7 @@ JOIN schemas nt ON t.relnamespace = nt.oid
 GROUP BY nv.schemaname
 ORDER BY 1;
         """
-        if version.parse(sa.__version__) > version.parse("2"):
-            cursor = self.connection.exec_driver_sql(query)
-        else:
-            cursor = self.connection.execute(query)
+        cursor = self.connection.exec_driver_sql(query)
         self.schema_perm = [x[0] for x in cursor.fetchall()]
         print("Done")
 
@@ -447,10 +440,7 @@ ORDER BY 1;
                         AND dependent_view.relname = '{view}';
                     """.format(schema=schema, view=table)
         if self.__check_schema_perms(schema):
-            if version.parse(sa.__version__) > version.parse("2"):
-                result = self.connection.exec_driver_sql(sql_code)
-            else:
-                result = self.connection.execute(sql_code)
+            result = self.connection.exec_driver_sql(sql_code)
             return result.fetchone()[0]
 
     def describe_table(self, library, table):
@@ -500,10 +490,7 @@ ORDER BY 1;
         """.format(sa.sql.quoted_name(library, True), sa.sql.quoted_name(table, True))
 
         try:
-            if version.parse(sa.__version__) > version.parse("2"):
-                result = self.connection.exec_driver_sql(sqlstmt)
-            else:
-                result = self.connection.execute(sqlstmt)
+            result = self.connection.exec_driver_sql(sqlstmt)
             return int(result.fetchone()[0][0]["Plan"]["Plan Rows"])
         except Exception as e:
             print("There was a problem with retrieving the row count: {}".format(e))
