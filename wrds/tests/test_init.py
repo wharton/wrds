@@ -3,7 +3,7 @@ from unittest import mock
 import wrds
 
 
-def test_init_calls_sqlalchemy_create_engine_defaults(mock_sa=None):
+def test_init_calls_sqlalchemy_create_engine_defaults():
     """Test init calls sqlalchemy create_engine with default parameters."""
     with mock.patch("wrds.sql.sa") as mock_sa:
         wrds.Connection()
