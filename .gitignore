@@ -1,4 +1,5 @@
 *.py[oc]
+.coverage
 __pycache__
 docs/build/
 build/

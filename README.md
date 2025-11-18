@@ -1,44 +1,44 @@
-# WRDS-Py from Wharton Research Data Services
+# PyWRDS from Wharton Research Data Services
 
-WRDS-Py is a Python package for examining datasets on the [Wharton Research Data Services (WRDS)](https://wrds-www.wharton.upenn.edu) platform, and extracting data to Pandas dataframes. A WRDS account is required.
+PyWRDS is a Python package for examining datasets on the [Wharton Research Data Services (WRDS)](https://wrds-www.wharton.upenn.edu) platform, and extracting data to Pandas dataframes. A WRDS account is required.
 
 ## Installation
 
-The WRDS-Py package is supported on Python 3.8 through 3.12. To ensure you have a supported Python version, type `python --version` at a command line interface, and check that it is between 3.8 and 3.12. On some systems, Python may be in installed as `python3`. You can [download Python here](https://www.python.org/downloads/) if it isn't installed.
+The PyWRDS package is supported on Python 3.8 through 3.12. To ensure you have a supported Python version, type `python --version` at a command line interface, and check that it is between 3.8 and 3.12. On some systems, Python may be in installed as `python3`. You can [download Python here](https://www.python.org/downloads/) if it isn't installed.
 
-The WRDS-Py package must be installed before it can be used for the first time. The recommended method is to use a [virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) (`venv`), so you can `import` it to use in Python. This example will install the WRDS-Py package (`wrds`) and [IPython](https://ipython.org/), which provides a much nicer command line interface than is included with Python.
+The PyWRDS package must be installed before it can be used for the first time. The recommended method is to use a [virtual environment](https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/) (`venv`), so you can `import` it to use in Python. This example will install the PyWRDS package (`wrds`) and [IPython](https://ipython.org/), which provides a much nicer command line interface than is included with Python.
 
 #### Linux or MacOS
 
 ```
-$ python -m venv --copies --prompt wrds-py wrds-py
-$ source wrds-py/bin/activate
-(wrds-py) $ python -m pip install -U pip wheel wrds ipython
+$ python -m venv --copies --prompt pywrds pywrds
+$ source pywrds/bin/activate
+(pywrds) $ python -m pip install -U pip wheel wrds
 ```
 
-In this example, Python will create a `venv` in your current directory `./wrds-py`, so that when you want to use it again, you can simply activate it:
+In this example, Python will create a `venv` in your current directory `./pywrds`, so that when you want to use it again, you can simply activate it:
 
 ```
-$ source wrds-py/bin/activate
+$ source pywrds/bin/activate
 ```
 
 #### Windows
 
 ```
-C:\Users\username> python -m venv --copies --prompt wrds-py wrds-py
-C:\Users\username> wrds-py\Scripts\activate
-(wrds-py) C:\Users\username> python -m pip install -U pip wheel wrds ipython
+C:\Users\username> python -m venv --copies --prompt pywrds pywrds
+C:\Users\username> pywrds\Scripts\activate
+(pywrds) C:\Users\username> python -m pip install -U pip wheel wrds
 ```
 
-In this example, Python will create a `venv` in the directory `C:\Users\username\wrds-py`, so that when you want to use it again, you can simply activate it:
+In this example, Python will create a `venv` in the directory `C:\Users\username\pywrds`, so that when you want to use it again, you can simply activate it:
 
 ```
-C:\Users\username> wrds-py\Scripts\activate
+C:\Users\username> pywrds\Scripts\activate
 ```
 
 For detailed information on installation of the module, please see [PYTHON: From Your Computer (Jupyter/Spyder)](https://wrds-www.wharton.upenn.edu/pages/support/programming-wrds/programming-python/python-from-your-computer/)
 
-## Using the Py-WRDS Package
+## Using the PyWRDS Package
 
 Type `ipython` to start the IPython command line interface.
 
@@ -85,3 +85,7 @@ In [8]: with wrds.Connection() as db:  # You can use a context manager
 3  10001.0  7953.0  2008-02-05  2009-08-03  36720410  29274A20   EWST
 4  10001.0  7953.0  2009-08-04  2009-12-17  36720410  29269V10   EGAS
 ```
+
+## Development and Test Suite
+
+Clone the repository and install with `pip install -e .[dev]`. Then run `pytest`.

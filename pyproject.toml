@@ -2,6 +2,16 @@
 requires = ["setuptools>=67", "setuptools_scm>=7", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.coverage.run]
+omit = ["./tests/*", "*/worker-base/*"]
+
+[tool.pytest.ini_options]
+addopts = "--tb=short --cov --cov-report=html"
+norecursedirs = [".git", ".vscode"]
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
 [tool.setuptools_scm]
 write_to = "wrds/_version.py"
 
@@ -35,12 +45,18 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
 ]
 dependencies = [
-    "packaging<=24.2",
+    "ipython<=9.8.0",
     "pandas>=2.2,<2.3",
     "psycopg2-binary>=2.9,<2.10",
     "sqlalchemy>=2,<2.1",
 ]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "ruff<=0.15.0",
+    "pytest-cov<=7.1.0",
+]
 
 [project.urls]
 "Homepage" = "http://wrds-www.wharton.upenn.edu"
