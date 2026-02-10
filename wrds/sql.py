@@ -77,7 +77,7 @@ class Connection(object):
     def __make_sa_engine_conn(self, raise_err=False):
         username = self._username
         hostname = self._hostname
-        password = urllib.parse.quote_plus(self._password)
+        password = urllib.parse.quote(self._password)
         port = self._port
         dbname = self._dbname
         pguri = f"postgresql://{username}:{password}@{hostname}:{port}/{dbname}"
